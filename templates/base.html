@@ -1,0 +1,123 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bilan Carbone - Évry{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    {% if user.is_authenticated %}
+    <header class="header">
+        <div class="container">
+            <div class="header__content">
+                <button class="menu-toggle" id="menuToggle" aria-label="Ouvrir le menu">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+                <a href="{% url 'dashboard' %}" class="header__title-link">
+                    <h1 class="header__title">🌱 Bilan Carbone - Évry</h1>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar__header">
+            <div class="sidebar__user-info">
+                <span class="sidebar__avatar">👤</span>
+                <span class="sidebar__username">{{ user.get_full_name|default:user.username }}</span>
+            </div>
+            <button class="sidebar__close" id="sidebarClose" aria-label="Fermer">×</button>
+        </div>
+
+        <ul class="sidebar__nav">
+            <li class="sidebar__item">
+                <a href="{% url 'dashboard' %}" class="sidebar__link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    📊 Tableau de bord
+                </a>
+            </li>
+            
+            <li class="sidebar__separator">Secteurs</li>
+
+            <li class="sidebar__item">
+                <a href="{% url 'vehicle_list'|default:'#' %}" class="sidebar__link">
+                    🚗 Véhicules
+                </a>
+            </li>
+            <li class="sidebar__item">
+                <a href="{% url 'batiment_list'|default:'#' %}" class="sidebar__link"> 🏢 Bâtiments & Énergies
+                </a>
+            </li>
+            <li class="sidebar__item">
+                <a href="{% url 'food_list'|default:'#' %}" class="sidebar__link"> 🥗 Alimentation
+                </a>
+            </li>
+            <li class="sidebar__item">
+                <a href="{% url 'purchase_list'|default:'#' %}" class="sidebar__link"> 💶 Achats
+                </a>
+            </li>
+            <li class="sidebar__item">
+                <a href="{% url 'numerique_list'|default:'#' %}" class="sidebar__link"> 💻 Numérique
+                </a>
+            </li>
+            <li class="sidebar__item">
+                <a href="{% url 'sensibilisation_page'|default:'#' %}" class="sidebar__link"> 📢 Sensibilisation
+                </a>
+            </li>
+
+            <li class="sidebar__separator">Compte</li>
+            
+            <li class="sidebar__item">
+                <a href="{% url 'logout' %}" class="sidebar__link sidebar__link--logout">
+                    🚪 Déconnexion
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+    <main class="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p class="footer__text">
+                Mairie d'Évry-Courcouronnes - Bilan Carbone 2026
+            </p>
+            <p class="footer__text footer__text--small">
+                Données : ADEME Base Carbone® | Éco-conçu avec ❤️
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebarClose = document.getElementById('sidebarClose');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            function toggleMenu() {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+            }
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', toggleMenu);
+                sidebarClose.addEventListener('click', toggleMenu);
+                overlay.addEventListener('click', toggleMenu);
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
