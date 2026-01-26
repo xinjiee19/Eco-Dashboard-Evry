@@ -22,17 +22,17 @@ class EmissionFactorAdmin(admin.ModelAdmin):
 @admin.register(VehicleData)
 class VehicleDataAdmin(admin.ModelAdmin):
     list_display = [
-        'year', 'service', 'group', 'calculation_method',
+        'year', 'service', 'group', 'user', 'calculation_method',
         'total_co2_kg', 'created_at'
     ]
-    list_filter = ['year', 'calculation_method', 'service', 'group']
-    search_fields = ['service', 'group__name', 'notes']
+    list_filter = ['year', 'calculation_method', 'service', 'group', 'user']
+    search_fields = ['service', 'group__name', 'notes', 'user__username']
     ordering = ['-year', '-created_at']
-    readonly_fields = ['total_co2_kg', 'essence_co2_kg', 'gazole_co2_kg', 'created_at', 'updated_at']
+    readonly_fields = ['user', 'total_co2_kg', 'essence_co2_kg', 'gazole_co2_kg', 'created_at', 'updated_at']
     
     fieldsets = (
         ('Informations générales', {
-            'fields': ('group', 'year', 'service', 'calculation_method')
+            'fields': ('group', 'user', 'year', 'service', 'calculation_method')
         }),
         ('Méthode par carburant', {
             'fields': ('essence_liters', 'gazole_liters'),

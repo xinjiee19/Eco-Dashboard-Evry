@@ -27,6 +27,7 @@ def vehicle_form_view(request):
 
             vehicle_data = form.save(commit=False)
             vehicle_data.group = user_group
+            vehicle_data.user = request.user
             vehicle_data.calculation_method = form.cleaned_data['calculation_method']
             vehicle_data.save()
             

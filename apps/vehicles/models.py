@@ -86,6 +86,12 @@ class VehicleData(models.Model):
         verbose_name="Groupe",
         null=True, blank=True
     )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        verbose_name="Créé par"
+    )
     year = models.IntegerField(
         default=2026,
         verbose_name="Année"

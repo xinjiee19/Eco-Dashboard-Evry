@@ -38,6 +38,7 @@ class Command(BaseCommand):
         self.stdout.write("Creating groups and a sample user for each sector...")
         sectors = ["Bâtiments", "Véhicules", "Alimentation", "Achats", "Numérique"]
         groups = {}
+        users = {}
         for sector_name in sectors:
             group, _ = Group.objects.get_or_create(name=sector_name)
             groups[sector_name] = group
@@ -53,6 +54,7 @@ class Command(BaseCommand):
                 user.save()
             
             user.groups.add(group)
+            users[sector_name] = user
             self.stdout.write(f"  - Group '{group.name}' created.")
             self.stdout.write(f"  - User '{user.username}' created and added to group. (password: password)")
 
@@ -134,6 +136,7 @@ class Command(BaseCommand):
         # --- VEHICLES ---
         self.stdout.write("Generating Vehicle Data...")
         vehicules_group = groups["Véhicules"]
+        vehicules_user = users["Véhicules"]
         for year in years:
             for service in services:
                 if random.random() > 0.7: continue
@@ -141,6 +144,7 @@ class Command(BaseCommand):
                 method = random.choice(['fuel', 'distance'])
                 entry = VehicleData(
                     group=vehicules_group,
+                    user=vehicules_user,
                     year=year,
                     service=service,
                     calculation_method=method
