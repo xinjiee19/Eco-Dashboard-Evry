@@ -1,20 +1,20 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Données Véhicules - Bilan Carbone{% endblock %}
+{% block title %}Données Achats - Bilan Carbone{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="page-header">
         <div>
-            <h2 class="page-title">🚗 Mes Données Véhicules</h2>
-            <p class="page-subtitle">{{ count }} donnée(s) enregistrée(s)</p>
+            <h2 class="page-title">🛒 Mes Données Achats</h2>
+            <p class="page-subtitle">{{ purchase_count }} donnée(s) enregistrée(s)</p>
         </div>
         <div style="display: flex; gap: 10px;">
-            <a href="{% url 'vehicle_form' %}" class="btn btn-primary">
+            <a href="{% url 'purchase_form' %}" class="btn btn--primary">
                 📝 Nouvelle saisie
             </a>
-            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+            <a href="{% url 'dashboard' %}" class="btn btn--secondary">
                 🏠 Retourner au dashboard
             </a>
         </div>
@@ -30,11 +30,16 @@
     </div>
     {% endif %}
 
-    {% if vehicle_data %}
+    {% if purchases %}
     <!-- Total CO2 card -->
-    <div class="metric-card">
-        <div class="metric-card__label">Impact Carbone Total (Véhicules)</div>
-        <div class="metric-card__value">{{ total_co2|floatformat:2 }} <span class="metric-card__unit">kg CO₂e</span></div>
+    <div class="total-card">
+        <div class="total-card__icon">🌍</div>
+        <div class="total-card__content">
+            <h3 class="total-card__label">Impact carbone total</h3>
+            <p class="total-card__value">{{ total_co2|floatformat:2 }} kg CO₂e</p>
+            <p class="total-card__subtext">≈ {% widthratio total_co2 1000 1 %} tonne(s) CO₂e | Montant total:
+                {{ total_amount|floatformat:2 }} €</p>
+        </div>
     </div>
 
     <!-- Data table -->
@@ -43,53 +48,47 @@
             <thead>
                 <tr>
                     <th>Année</th>
-                    <th>Service</th>
-                    <th>Méthode</th>
-                    <th>Détails</th>
+                    <th>Catégorie</th>
+                    <th>Description</th>
+                    <th>Montant (€)</th>
                     <th>CO₂ (kg)</th>
                     <th>Date</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for data in vehicle_data %}
+                {% for purchase in purchases %}
                 <tr class="data-row">
-                    <td class="data-cell data-cell--bold">{{ data.year }}</td>
-                    <td class="data-cell">{{ data.service|default:"—" }}</td>
+                    <td class="data-cell data-cell--bold">{{ purchase.year }}</td>
                     <td class="data-cell">
-                        {% if data.calculation_method == 'fuel' %}
-                        <span class="badge badge--fuel">⛽ Carburant</span>
-                        {% else %}
-                        <span class="badge badge--distance">📏 Distance</span>
-                        {% endif %}
+                        <span class="badge badge--category">{{ purchase.get_category_display }}</span>
                     </td>
                     <td class="data-cell">
-                        {% if data.calculation_method == 'fuel' %}
-                        {% if data.essence_liters %}Essence: {{ data.essence_liters }} L<br>{% endif %}
-                        {% if data.gazole_liters %}Gazole: {{ data.gazole_liters }} L{% endif %}
-                        {% else %}
-                        Distance: {{ data.distance_km }} km
-                        {% endif %}
+                        {{ purchase.description|truncatechars:50 }}
+                    </td>
+                    <td class="data-cell">
+                        {{ purchase.amount_euros|floatformat:2 }}
                     </td>
                     <td class="data-cell data-cell--highlight">
-                        {{ data.total_co2_kg|floatformat:2 }}
+                        {{ purchase.total_co2_kg|floatformat:2 }}
                     </td>
                     <td class="data-cell data-cell--small">
-                        {{ data.created_at|date:"d/m/Y" }}
+                        {{ purchase.created_at|date:"d/m/Y" }}
                     </td>
                     <td class="data-cell">
                         <div class="action-buttons">
-                            <a href="{% url 'vehicle_detail' data.pk %}" class="btn-icon" title="Voir">
-                                👁️
-                            </a>
-                            <a href="{% url 'vehicle_update' data.pk %}" class="btn-icon btn-icon--edit"
-                                title="Modifier">
-                                ✏️
-                            </a>
-                            <a href="{% url 'vehicle_delete' data.pk %}" class="btn-icon btn-icon--danger"
-                                title="Supprimer">
-                                🗑️
-                            </a>
+                            <a href="{% url 'purchase_detail' purchase.pk %}" class="btn-icon" title="Voir">
+                                <a href="{% url 'purchase_detail' purchase.pk %}" class="btn-icon" title="Voir">
+                                    👁️
+                                </a>
+                                <a href="{% url 'purchase_update' purchase.pk %}" class="btn-icon btn-icon--edit"
+                                    title="Modifier">
+                                    ✏️
+                                </a>
+                                <a href="{% url 'purchase_delete' purchase.pk %}" class="btn-icon btn-icon--danger"
+                                    title="Supprimer">
+                                    🗑️
+                                </a>
                         </div>
                     </td>
                 </tr>
@@ -103,9 +102,9 @@
         <div class="empty-state__icon">📊</div>
         <h3 class="empty-state__title">Aucune donnée enregistrée</h3>
         <p class="empty-state__description">
-            Commencez par saisir vos premières données véhicules
+            Commencez par saisir vos premiers achats ou marchés
         </p>
-        <a href="{% url 'vehicle_form' %}" class="btn btn-primary btn-large">
+        <a href="{% url 'purchase_form' %}" class="btn btn--primary btn--large">
             ➕ Créer ma première saisie
         </a>
     </div>
@@ -113,10 +112,10 @@
 
     <!-- Info section -->
     <div class="info-section">
-        <h4>💡 Comment ça marche ?</h4>
+        <h4>💡 Facteurs d'émission</h4>
         <ul>
-            <li><strong>Par carburant</strong> : Saisissez vos consommations d'essence et/ou de gazole</li>
-            <li><strong>Par distance</strong> : Saisissez la distance totale parcourue</li>
+            <li><strong>9 catégories disponibles</strong> : De 100 à 600 kg CO₂e/k€</li>
+            <li><strong>Calcul automatique</strong> : Impact carbone calculé selon le montant et la catégorie</li>
         </ul>
     </div>
 </div>
@@ -137,6 +136,39 @@
         color: var(--text-light);
         font-size: 0.9rem;
         margin-top: 0.25rem;
+    }
+
+    .total-card {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 8px rgba(45, 106, 79, 0.2);
+    }
+
+    .total-card__icon {
+        font-size: 3rem;
+    }
+
+    .total-card__label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        opacity: 0.9;
+    }
+
+    .total-card__value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+
+    .total-card__subtext {
+        font-size: 0.9rem;
+        opacity: 0.8;
     }
 
     .data-table-container {
@@ -194,12 +226,7 @@
         font-weight: 600;
     }
 
-    .badge--fuel {
-        background: #d1e7dd;
-        color: #0f5132;
-    }
-
-    .badge--distance {
+    .badge--category {
         background: #cfe2ff;
         color: #084298;
     }

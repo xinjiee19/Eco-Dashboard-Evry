@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 
@@ -80,10 +80,11 @@ class VehicleData(models.Model):
         ('distance', 'Par distance'),
     ]
     
-    user = models.ForeignKey(
-        User,
+    group = models.ForeignKey(
+        Group,
         on_delete=models.CASCADE,
-        verbose_name="Utilisateur"
+        verbose_name="Groupe",
+        null=True, blank=True
     )
     year = models.IntegerField(
         default=2026,
@@ -173,11 +174,11 @@ class VehicleData(models.Model):
     class Meta:
         verbose_name = "Donnée véhicule"
         verbose_name_plural = "Données véhicules"
-        ordering = ['-created_at']
-        unique_together = [['user', 'year', 'service']]
+        ordering = ['-year', '-created_at']
+        unique_together = [['group', 'year', 'service']]
     
     def __str__(self):
-        return f"{self.service or 'Service'} - {self.year} ({self.user.username})"
+        return f"{self.service or 'Service'} - {self.year} ({self.group.name if self.group else 'N/A'})"
     
     def calculate_impact(self):
         """Calcule l'impact carbone total"""

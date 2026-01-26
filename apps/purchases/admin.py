@@ -18,14 +18,14 @@ class PurchaseDataAdmin(admin.ModelAdmin):
     Interface admin pour les données d'achats.
     """
     
-    list_display = ('year', 'category', 'description_short', 'amount_euros', 'total_co2_kg', 'user', 'created_at')
-    list_filter = ('year', 'category', 'user')
-    search_fields = ('description', 'service', 'notes')
+    list_display = ('year', 'category', 'description_short', 'amount_euros', 'total_co2_kg', 'group', 'created_at')
+    list_filter = ('year', 'category', 'group')
+    search_fields = ('description', 'service', 'notes', 'group__name')
     readonly_fields = ('emission_factor', 'total_co2_kg', 'created_at', 'updated_at')
     
     fieldsets = (
         ('Métadonnées', {
-            'fields': ('user', 'year', 'service')
+            'fields': ('group', 'year', 'service')
         }),
         ('Données d\'achat', {
             'fields': ('category', 'description', 'amount_euros')

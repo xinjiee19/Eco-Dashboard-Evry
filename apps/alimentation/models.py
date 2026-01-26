@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
+from django.contrib.auth.models import Group
 
 User = get_user_model()
 
@@ -35,7 +36,7 @@ class FoodEntry(models.Model):
     """
     YEAR_CHOICES = [(y, y) for y in range(2020, 2036)]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True)
     service = models.CharField(max_length=150)
     year = models.IntegerField(choices=YEAR_CHOICES)
 
@@ -71,7 +72,7 @@ class FoodEntry(models.Model):
         verbose_name = "Donnée alimentation"
         verbose_name_plural = "Données alimentation"
         ordering = ["-year", "service"]
-        unique_together = ("service", "year")
+        unique_together = ("group", "service", "year")
 
     def __str__(self):
         return f"{self.service} - {self.year} ({self.total_meals()} repas)"

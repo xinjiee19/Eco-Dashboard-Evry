@@ -1,49 +1,27 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Saisie Données Véhicules - Bilan Carbone{% endblock %}
+{% block title %}Saisie Données Achats - Bilan Carbone{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="page-header">
-        <h2 class="page-title">🚗 Saisie Données Véhicules</h2>
-        <a href="{% url 'vehicle_list' %}" class="btn btn--secondary">
+        <h2 class="page-title">🛒 Saisie Données Achats & Marchés</h2>
+        <a href="{% url 'purchase_list' %}" class="btn btn--secondary">
             ← Retour à la liste
         </a>
     </div>
 
-    <!-- Method selector -->
-    <div class="method-selector">
-        <p class="method-selector__label">Méthode de saisie :</p>
-        <div class="method-selector__buttons">
-            <a href="?method=fuel" class="method-btn {% if method == 'fuel' %}method-btn--active{% endif %}">
-                ⛽ Par carburant
-            </a>
-            <a href="?method=distance" class="method-btn {% if method == 'distance' %}method-btn--active{% endif %}">
-                📏 Par distance
-            </a>
-        </div>
-    </div>
-
     <!-- Form card -->
     <div class="form-card">
-        {% if method == 'fuel' %}
         <div class="form-card__header">
-            <h3>📊 Saisie par consommation de carburant</h3>
+            <h3>📊 Enregistrement d'un achat ou marché</h3>
             <p class="form-card__description">
-                Renseignez les consommations d'essence et/ou de gazole de votre service
+                Renseignez les informations sur les achats et marchés publics de votre service
             </p>
         </div>
-        {% else %}
-        <div class="form-card__header">
-            <h3>📏 Saisie par distance parcourue</h3>
-            <p class="form-card__description">
-                Renseignez la distance totale parcourue par les véhicules de votre service
-            </p>
-        </div>
-        {% endif %}
 
-        <form method="post" class="vehicle-form" id="vehicleForm">
+        <form method="post" class="purchase-form" id="purchaseForm">
             {% csrf_token %}
 
             {% if form.non_field_errors %}
@@ -77,10 +55,10 @@
             {% endfor %}
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary btn-large">
+                <button type="submit" class="btn btn--primary btn--large">
                     💾 Enregistrer
                 </button>
-                <a href="{% url 'vehicle_list' %}" class="btn btn-secondary">
+                <a href="{% url 'purchase_list' %}" class="btn btn--secondary">
                     Annuler
                 </a>
             </div>
@@ -93,21 +71,57 @@
         <table class="factors-table">
             <thead>
                 <tr>
-                    <th>Type</th>
+                    <th>Catégorie</th>
                     <th>Facteur</th>
                     <th>Unité</th>
-                    <th>Source</th>
                 </tr>
             </thead>
             <tbody>
-                {% for factor in emission_factors %}
                 <tr>
-                    <td>⛽ {{ factor.name }}</td>
-                    <td>{{ factor.factor_value }}</td>
-                    <td>kg CO₂e/{{ factor.unit }}</td>
-                    <td>{{ factor.source }}</td>
+                    <td>🍽️ Restauration & Services légers</td>
+                    <td>100</td>
+                    <td>kg CO₂e/k€</td>
                 </tr>
-                {% endfor %}
+                <tr>
+                    <td>📄 Assurances & Cotisations</td>
+                    <td>110</td>
+                    <td>kg CO₂e/k€</td>
+                </tr>
+                <tr>
+                    <td>💻 IT & Téléphonie</td>
+                    <td>160</td>
+                    <td>kg CO₂e/k€</td>
+                </tr>
+                <tr>
+                    <td>🧹 Nettoyage & Espaces verts</td>
+                    <td>215</td>
+                    <td>kg CO₂e/k€</td>
+                </tr>
+                <tr>
+                    <td>🎪 Séjours & Activités</td>
+                    <td>270</td>
+                    <td>kg CO₂e/k€</td>
+                </tr>
+                <tr>
+                    <td>👕 Blanchisserie</td>
+                    <td>320</td>
+                    <td>kg CO₂e/k€</td>
+                </tr>
+                <tr>
+                    <td>🏗️ Travaux & Construction</td>
+                    <td>360</td>
+                    <td>kg CO₂e/k€</td>
+                </tr>
+                <tr>
+                    <td>🚌 Transports</td>
+                    <td>560</td>
+                    <td>kg CO₂e/k€</td>
+                </tr>
+                <tr>
+                    <td>🚜 Location équipements</td>
+                    <td>600</td>
+                    <td>kg CO₂e/k€</td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -129,49 +143,6 @@
         font-size: 1.75rem;
         color: var(--primary);
         margin: 0;
-    }
-
-    .method-selector {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin-bottom: 2rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .method-selector__label {
-        font-weight: 600;
-        margin-bottom: 1rem;
-        color: var(--text-dark);
-    }
-
-    .method-selector__buttons {
-        display: flex;
-        gap: 1rem;
-    }
-
-    .method-btn {
-        flex: 1;
-        padding: 1rem;
-        background: var(--bg-main);
-        border: 2px solid var(--border);
-        border-radius: 6px;
-        text-align: center;
-        text-decoration: none;
-        color: var(--text-dark);
-        font-weight: 500;
-        transition: all 0.2s;
-    }
-
-    .method-btn:hover {
-        border-color: var(--primary);
-        background: white;
-    }
-
-    .method-btn--active {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
     }
 
     .form-card {
@@ -202,7 +173,9 @@
         margin-bottom: 1.5rem;
     }
 
-    .form-group--error .form-input {
+    .form-group--error .form-input,
+    .form-group--error .form-select,
+    .form-group--error .form-textarea {
         border-color: #dc3545;
     }
 
@@ -236,6 +209,11 @@
         margin-top: 2rem;
         padding-top: 1.5rem;
         border-top: 1px solid var(--border);
+    }
+
+    .btn--large {
+        padding: 1rem 2rem;
+        font-size: 1.05rem;
     }
 
     .info-box {
@@ -296,10 +274,6 @@
             flex-direction: column;
             gap: 1rem;
             align-items: flex-start;
-        }
-
-        .method-selector__buttons {
-            flex-direction: column;
         }
 
         .form-actions {

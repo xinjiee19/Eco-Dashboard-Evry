@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User, Group
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -11,8 +12,13 @@ def purchase_form(request):
     if request.method == 'POST':
         form = PurchaseDataForm(request.POST)
         if form.is_valid():
+            user_group = request.user.groups.first()
+            if not user_group and not request.user.is_superuser:
+                messages.error(request, "Votre compte n'est associé à aucun groupe. Impossible d'enregistrer.")
+                return redirect('purchase_list')
+
             purchase = form.save(commit=False)
-            purchase.user = request.user
+            purchase.group = user_group
             purchase.save()
             
             messages.success(
@@ -40,7 +46,11 @@ def purchase_form(request):
 @login_required
 def purchase_list(request):
     """Vue listant toutes les données d'achats de l'utilisateur."""
-    purchases = PurchaseData.objects.filter(user=request.user)
+    if request.user.is_staff or request.user.is_superuser:
+        purchases = PurchaseData.objects.all()
+    else:
+        # Les agents ne voient que les données de leur(s) groupe(s)
+        purchases = PurchaseData.objects.filter(group__in=request.user.groups.all())
     
     # Statistiques
     total_co2 = sum(p.total_co2_kg for p in purchases)
@@ -57,7 +67,10 @@ def purchase_list(request):
 @login_required
 def purchase_detail(request, pk):
     """Vue détaillée d'un achat."""
-    purchase = get_object_or_404(PurchaseData, pk=pk, user=request.user)
+    if request.user.is_staff or request.user.is_superuser:
+        purchase = get_object_or_404(PurchaseData, pk=pk)
+    else:
+        purchase = get_object_or_404(PurchaseData, pk=pk, group__in=request.user.groups.all())
     
     return render(request, 'purchases/purchase_detail.html', {
         'purchase': purchase
@@ -67,14 +80,15 @@ def purchase_detail(request, pk):
 @login_required
 def purchase_update(request, pk):
     """Modification d'un achat."""
-    purchase = get_object_or_404(PurchaseData, pk=pk, user=request.user)
+    if request.user.is_staff or request.user.is_superuser:
+        purchase = get_object_or_404(PurchaseData, pk=pk)
+    else:
+        purchase = get_object_or_404(PurchaseData, pk=pk, group__in=request.user.groups.all())
     
     if request.method == 'POST':
         form = PurchaseDataForm(request.POST, instance=purchase)
         if form.is_valid():
-            p = form.save(commit=False)
-            p.user = request.user
-            p.save()
+            form.save()
             messages.success(request, '✅ Achat modifié avec succès !')
             return redirect('purchase_list')
     else:
@@ -95,7 +109,10 @@ def purchase_update(request, pk):
 @login_required
 def purchase_delete(request, pk):
     """Suppression d'un achat."""
-    purchase = get_object_or_404(PurchaseData, pk=pk, user=request.user)
+    if request.user.is_staff or request.user.is_superuser:
+        purchase = get_object_or_404(PurchaseData, pk=pk)
+    else:
+        purchase = get_object_or_404(PurchaseData, pk=pk, group__in=request.user.groups.all())
     
     if request.method == 'POST':
         purchase.delete()

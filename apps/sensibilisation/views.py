@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from django.db.models import Sum
 from datetime import datetime
@@ -14,7 +15,7 @@ from .services import SensibilisationService
 from .forms import MessageSensibilisationForm
 
 
-def get_module_totals(year, user=None):
+def get_module_totals(year):
     """Calcule les totaux CO2 par module pour une année donnée"""
     vehicles = float(VehicleData.objects.filter(year=year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
     purchases = float(PurchaseData.objects.filter(year=year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
@@ -39,28 +40,26 @@ def calculate_variation(current, previous):
     return round(((current - previous) / previous) * 100, 1)
 
 
-@login_required
+@user_passes_test(lambda u: u.is_staff)
 def sensibilisation_page(request):
     """Page dédiée Sensibilisation avec équivalences, conseils et comparatif"""
     current_year = datetime.now().year
     previous_year = current_year - 1
 
     # Handle form submission (admin only)
-    form = None
-    if request.user.is_staff:
-        if request.method == 'POST':
-            form = MessageSensibilisationForm(request.POST)
-            if form.is_valid():
-                form.save()
-                messages.success(request, '✅ Message créé avec succès !')
-                return redirect('sensibilisation_page')
-        else:
-            form = MessageSensibilisationForm()
+    if request.method == 'POST':
+        form = MessageSensibilisationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '✅ Message créé avec succès !')
+            return redirect('sensibilisation_page')
+    else:
+        form = MessageSensibilisationForm()
 
     # Totaux année en cours
-    stats_current = get_module_totals(current_year, request.user)
+    stats_current = get_module_totals(current_year)
     # Totaux année précédente
-    stats_previous = get_module_totals(previous_year, request.user)
+    stats_previous = get_module_totals(previous_year)
 
     # Calculer les variations
     comparaison = []
@@ -107,4 +106,3 @@ def sensibilisation_page(request):
         'form': form,
     }
     return render(request, 'sensibilisation/sensibilisation_page.html', context)
-

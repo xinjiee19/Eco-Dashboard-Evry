@@ -9,14 +9,14 @@ class BuildingEnergyDataAdmin(admin.ModelAdmin):
     Note: Les facteurs d'émission ADEME (kgCO2e/kWh) sont configurés dans:
     CORE > Configuration ADEME
     """
-    list_display = ('year', 'site_name', 'surface_area', 'total_kwh', 'total_co2_kg', 'user', 'created_at')
-    list_filter = ('year', 'user')
-    search_fields = ('site_name', 'notes')
+    list_display = ('year', 'site_name', 'surface_area', 'total_kwh', 'total_co2_kg', 'group', 'created_at')
+    list_filter = ('year', 'group')
+    search_fields = ('site_name', 'notes', 'group__name')
     readonly_fields = ('total_co2_kg', 'created_at')
     
     fieldsets = (
         ('Identification', {
-            'fields': ('user', 'year', 'site_name', 'surface_area', 'construction_year')
+            'fields': ('group', 'year', 'site_name', 'surface_area', 'construction_year')
         }),
         ('Consommations énergétiques (kWh)', {
             'fields': ('electricity_kwh', 'gas_kwh', 'heating_network_kwh', 'cooling_kwh', 'photovoltaic_production_kwh')

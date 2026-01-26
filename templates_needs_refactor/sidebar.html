@@ -1,0 +1,114 @@
+{% load static %}
+<div class="sidebar">
+    <div class="sidebar-header">
+        <a href="{% url 'dashboard' %}" class="sidebar-brand">
+            <span class="sidebar-brand-icon">🌍</span>
+            <span class="sidebar-brand-text">Eco-Dashboard</span>
+        </a>
+    </div>
+
+    <nav class="sidebar-nav">
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+                <a href="{% url 'dashboard' %}" class="sidebar-menu-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <span>🏠</span> Tableau de Bord
+                </a>
+            </li>
+
+            <li class="sidebar-menu-header">Modules de Saisie</li>
+
+            {% if user.is_staff or user.is_superuser %}
+                <!-- ADMIN/STAFF: Show all modules -->
+                <li class="sidebar-menu-item">
+                    <a href="{% url 'batiment_list' %}" class="sidebar-menu-link {% if 'batiment' in request.path %}active{% endif %}">
+                        <span>🏢</span> Bâtiments
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="{% url 'vehicle_list' %}" class="sidebar-menu-link {% if 'vehicules' in request.path %}active{% endif %}">
+                        <span>🚗</span> Véhicules
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="{% url 'food_list' %}" class="sidebar-menu-link {% if 'alimentation' in request.path %}active{% endif %}">
+                        <span>🍽️</span> Alimentation
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="{% url 'purchase_list' %}" class="sidebar-menu-link {% if 'achats' in request.path %}active{% endif %}">
+                        <span>🛒</span> Achats
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="{% url 'numerique_dashboard' %}" class="sidebar-menu-link {% if 'numerique' in request.path %}active{% endif %}">
+                        <span>💻</span> Numérique
+                    </a>
+                </li>
+
+            {% else %}
+                <!-- AGENT: Show only modules for their group(s) -->
+                {% for group in user.groups.all %}
+                    {% if group.name == "Bâtiments" %}
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'batiment_list' %}" class="sidebar-menu-link {% if 'batiment' in request.path %}active{% endif %}">
+                            <span>🏢</span> Bâtiments
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if group.name == "Véhicules" %}
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'vehicle_list' %}" class="sidebar-menu-link {% if 'vehicules' in request.path %}active{% endif %}">
+                            <span>🚗</span> Véhicules
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if group.name == "Alimentation" %}
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'food_list' %}" class="sidebar-menu-link {% if 'alimentation' in request.path %}active{% endif %}">
+                            <span>🍽️</span> Alimentation
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if group.name == "Achats" %}
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'purchase_list' %}" class="sidebar-menu-link {% if 'achats' in request.path %}active{% endif %}">
+                            <span>🛒</span> Achats
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if group.name == "Numérique" %}
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'numerique_dashboard' %}" class="sidebar-menu-link {% if 'numerique' in request.path %}active{% endif %}">
+                            <span>💻</span> Numérique
+                        </a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            {% if user.is_staff or user.is_superuser %}
+                <li class="sidebar-menu-header">Administration</li>
+                <li class="sidebar-menu-item">
+                    <a href="{% url 'sensibilisation_page' %}" class="sidebar-menu-link {% if 'sensibilisation' in request.path %}active{% endif %}">
+                        <span>📢</span> Sensibilisation
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="/admin/" class="sidebar-menu-link" target="_blank">
+                        <span>⚙️</span> Site Admin
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <strong>{{ user.username }}</strong><br>
+            <small>
+                {% if user.is_superuser %}Super-Admin{% elif user.is_staff %}Admin{% else %}Agent ({{ user.groups.first.name|default:'N/A' }}){% endif %}
+            </small>
+        </div>
+        <a href="{% url 'logout' %}" class="logout-link">Déconnexion</a>
+    </div>
+</div>

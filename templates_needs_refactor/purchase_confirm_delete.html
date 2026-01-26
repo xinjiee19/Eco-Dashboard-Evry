@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-
-{% block title %}Confirmation Suppression - Bilan Carbone{% endblock %}
+{% block title %}Supprimer achat - Bilan Carbone{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -13,19 +12,25 @@
 
         <div class="confirm-content">
             <p class="confirm-message">
-                Êtes-vous sûr de vouloir supprimer cette donnée ?
+                Êtes-vous sûr de vouloir supprimer cet achat ?
             </p>
 
             <div class="data-preview">
                 <dl>
-                    <dt>Année</dt>
-                    <dd>{{ vehicle_data.year }}</dd>
-
                     <dt>Service</dt>
-                    <dd>{{ vehicle_data.service|default:"Non renseigné" }}</dd>
+                    <dd>{{ purchase.service }} ({{ purchase.year }})</dd>
+
+                    <dt>Catégorie</dt>
+                    <dd>{{ purchase.get_category_display }}</dd>
+
+                    <dt>Description</dt>
+                    <dd>{{ purchase.description }}</dd>
+
+                    <dt>Montant</dt>
+                    <dd>{{ purchase.amount_euros }} €</dd>
 
                     <dt>Impact CO₂</dt>
-                    <dd class="highlight">{{ vehicle_data.total_co2_kg|floatformat:2 }} kg CO₂e</dd>
+                    <dd class="highlight">{{ purchase.total_co2_kg|floatformat:2 }} kg CO₂e</dd>
                 </dl>
             </div>
 
@@ -41,7 +46,7 @@
                 <button type="submit" class="btn btn--danger">
                     🗑️ Oui, supprimer
                 </button>
-                <a href="{% url 'vehicle_list' %}" class="btn btn--secondary">
+                <a href="{% url 'purchase_list' %}" class="btn btn--secondary">
                     Annuler
                 </a>
             </form>
@@ -74,7 +79,7 @@
     }
 
     .confirm-title {
-        color: var(--primary);
+        color: #2d6a4f;
         margin: 0;
     }
 
@@ -84,13 +89,13 @@
 
     .confirm-message {
         font-size: 1.125rem;
-        color: var(--text-dark);
+        color: #212529;
         margin-bottom: 2rem;
         text-align: center;
     }
 
     .data-preview {
-        background: var(--bg-main);
+        background: #f8f9fa;
         padding: 1.5rem;
         border-radius: 6px;
         margin-bottom: 1.5rem;
@@ -100,20 +105,21 @@
         display: grid;
         grid-template-columns: 150px 1fr;
         gap: 1rem;
+        margin: 0;
     }
 
     .data-preview dt {
         font-weight: 600;
-        color: var(--text-light);
+        color: #6c757d;
     }
 
     .data-preview dd {
         margin: 0;
-        color: var(--text-dark);
+        color: #212529;
     }
 
     .data-preview .highlight {
-        color: var(--primary);
+        color: #2d6a4f;
         font-weight: 700;
         font-size: 1.1rem;
     }
@@ -138,14 +144,41 @@
 
     .confirm-actions {
         padding: 1.5rem 2rem;
-        background: var(--bg-main);
-        border-top: 1px solid var(--border);
+        background: #f8f9fa;
+        border-top: 1px solid #dee2e6;
     }
 
     .confirm-actions form {
         display: flex;
         gap: 1rem;
         justify-content: center;
+    }
+
+    .btn--danger {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .btn--danger:hover {
+        background-color: #bb2d3b;
+    }
+
+    .btn--secondary {
+        text-decoration: none;
+        color: #6c757d;
+        padding: 0.5rem 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        background: white;
+    }
+
+    .btn--secondary:hover {
+        background: #e9ecef;
     }
 
     @media (max-width: 768px) {
@@ -168,6 +201,12 @@
 
         .confirm-actions form {
             flex-direction: column;
+        }
+
+        .btn--danger,
+        .btn--secondary {
+            width: 100%;
+            text-align: center;
         }
     }
 </style>

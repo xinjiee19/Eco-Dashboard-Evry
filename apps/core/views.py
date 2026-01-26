@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth.models import User
 from apps.vehicles.models import VehicleData, EmissionFactor
 
 
@@ -47,12 +48,21 @@ def dashboard_view(request):
 
     current_year = datetime.now().year
 
+    # Le dashboard est global pour tous les utilisateurs connectés.
+    # On récupère toutes les données, sans filtrer.
+    base_queryset_vehicles = VehicleData.objects.all()
+    base_queryset_purchases = PurchaseData.objects.all()
+    base_queryset_alimentation = FoodEntry.objects.all()
+    base_queryset_batiment = BuildingEnergyData.objects.all()
+    base_queryset_numerique = EquipementNumerique.objects.all()
+
+
     # Calcul des totaux pour l'année en cours
-    vehicles_total = float(VehicleData.objects.filter(year=current_year, user=request.user).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
-    purchases_total = float(PurchaseData.objects.filter(year=current_year, user=request.user).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
-    alimentation_total = float(FoodEntry.objects.filter(year=current_year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
-    building_total = float(BuildingEnergyData.objects.filter(year=current_year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
-    numerique_total = float(EquipementNumerique.objects.filter(year=current_year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
+    vehicles_total = float(base_queryset_vehicles.filter(year=current_year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
+    purchases_total = float(base_queryset_purchases.filter(year=current_year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
+    alimentation_total = float(base_queryset_alimentation.filter(year=current_year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
+    building_total = float(base_queryset_batiment.filter(year=current_year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
+    numerique_total = float(base_queryset_numerique.filter(year=current_year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
 
     total_co2 = vehicles_total + purchases_total + alimentation_total + building_total + numerique_total
 
@@ -65,7 +75,7 @@ def dashboard_view(request):
     }
     
     context = {
-        'vehicle_count': VehicleData.objects.filter(user=request.user).count(),
+        'vehicle_count': base_queryset_vehicles.count(),
         'emission_factors_count': EmissionFactor.objects.filter(is_active=True).count(),
         # Sensibilisation
         'message_admin': MessageSensibilisation.objects.filter(actif=True).first(),
@@ -210,9 +220,14 @@ def export_data_view(request):
     
     format_type = request.GET.get('format', 'csv')
     
-    # Récupération de toutes les données
-    vehicles = VehicleData.objects.filter(user=request.user)
-    buildings = BuildingEnergyData.objects.filter(user=request.user)
+    # Admins exportent tout, les agents exportent les données de leur groupe
+    if request.user.is_staff or request.user.is_superuser:
+        vehicles = VehicleData.objects.all()
+        buildings = BuildingEnergyData.objects.all()
+    else:
+        user_groups = request.user.groups.all()
+        vehicles = VehicleData.objects.filter(group__in=user_groups)
+        buildings = BuildingEnergyData.objects.filter(group__in=user_groups)
     
     if format_type == 'xlsx':
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -336,16 +351,17 @@ def statistics_api(request):
     from apps.batiment.models import BuildingEnergyData
     from apps.numerique.models import EquipementNumerique
     
-    # 1. Identifier les années
+    # 1. Identifier les années disponibles (vue globale)
     years = set()
-    years.update(VehicleData.objects.filter(user=request.user).values_list('year', flat=True))
-    years.update(BuildingEnergyData.objects.filter(user=request.user).values_list('year', flat=True))
-    years.update(FoodEntry.objects.filter(user=request.user).values_list('year', flat=True))
-    years.update(PurchaseData.objects.filter(user=request.user).values_list('year', flat=True))
-    years.update(EquipementNumerique.objects.filter(user=request.user).values_list('year', flat=True))
+    years.update(VehicleData.objects.values_list('year', flat=True))
+    years.update(BuildingEnergyData.objects.values_list('year', flat=True))
+    years.update(FoodEntry.objects.values_list('year', flat=True))
+    years.update(PurchaseData.objects.values_list('year', flat=True))
+    years.update(EquipementNumerique.objects.values_list('year', flat=True))
     
     sorted_years = sorted(list(years))
     if not sorted_years:
+        return JsonResponse({'years': [], 'stacked_data': {}, 'details_data': {}})
         sorted_years = [timezone.now().year]
 
     # 2. Préparer les données pour le Stacked Bar Chart (Global)
@@ -374,7 +390,7 @@ def statistics_api(request):
         }
 
         # --- BUILDING DETAILS ---
-        qs_b = BuildingEnergyData.objects.filter(user=request.user, year=year)
+        qs_b = BuildingEnergyData.objects.filter(year=year)
         # On recalcule les sommes des 'parties' pour le camembert
         # Attention: BuildingEnergyData n'a pas les champs 'elec_co2' stockés, on doit calculer
         # Sum( consumption * factor ) -> comme factor est par ligne, c'est complexe si factor change
@@ -402,7 +418,7 @@ def statistics_api(request):
 
 
         # --- VEHICLE DETAILS ---
-        qs_v = VehicleData.objects.filter(user=request.user, year=year)
+        qs_v = VehicleData.objects.filter(year=year)
         v_essence = 0
         v_gazole = 0
         v_distance = 0
@@ -425,7 +441,7 @@ def statistics_api(request):
 
 
         # --- FOOD DETAILS ---
-        qs_f = FoodEntry.objects.filter(user=request.user, year=year)
+        qs_f = FoodEntry.objects.filter(year=year)
         f_breakdown = {
             'Bœuf': 0, 
             'Porc': 0, 
@@ -450,7 +466,7 @@ def statistics_api(request):
 
 
         # --- PURCHASE DETAILS ---
-        qs_p = PurchaseData.objects.filter(user=request.user, year=year)
+        qs_p = PurchaseData.objects.filter(year=year)
         p_breakdown = {} # Dynamique selon catégories
         total_p = 0
         
@@ -464,7 +480,7 @@ def statistics_api(request):
 
 
         # --- NUMERIQUE DETAILS ---
-        qs_n = EquipementNumerique.objects.filter(user=request.user, year=year)
+        qs_n = EquipementNumerique.objects.filter(year=year)
         n_breakdown = {}
         total_n = 0
         

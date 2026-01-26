@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.utils import timezone
 from decimal import Decimal
 
@@ -58,10 +58,11 @@ class PurchaseData(models.Model):
     ]
     
     # Métadonnées
-    user = models.ForeignKey(
-        User,
+    group = models.ForeignKey(
+        Group,
         on_delete=models.CASCADE,
-        verbose_name="Utilisateur"
+        verbose_name="Groupe",
+        null=True, blank=True
     )
     
     year = models.IntegerField(

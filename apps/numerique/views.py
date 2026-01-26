@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User, Group
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -12,8 +13,13 @@ def numerique_dashboard(request):
     if request.method == 'POST':
         form = NumeriqueForm(request.POST)
         if form.is_valid():
+            user_group = request.user.groups.first()
+            if not user_group and not request.user.is_superuser:
+                messages.error(request, "Votre compte n'est associé à aucun groupe. Impossible d'enregistrer.")
+                return redirect('numerique_dashboard')
+
             numerique = form.save(commit=False)
-            numerique.user = request.user
+            numerique.group = user_group
             numerique.save()
             messages.success(request, '✅ Équipement ajouté avec succès !')
             return redirect('numerique_dashboard')
@@ -21,8 +27,12 @@ def numerique_dashboard(request):
         from django.utils import timezone
         form = NumeriqueForm(initial={'year': timezone.now().year})
     
-    # Récupérer tous les équipements de l'utilisateur
-    equipements = EquipementNumerique.objects.filter(user=request.user).order_by('-created_at')
+    # Récupérer tous les équipements en fonction du rôle de l'utilisateur
+    if request.user.is_staff or request.user.is_superuser:
+        equipements = EquipementNumerique.objects.all().order_by('-created_at')
+    else:
+        # Les agents ne voient que les données de leur(s) groupe(s)
+        equipements = EquipementNumerique.objects.filter(group__in=request.user.groups.all()).order_by('-created_at')
     
     # Calcul des totaux
     total_carbone = equipements.aggregate(Sum('empreinte_fabrication'))['empreinte_fabrication__sum'] or 0
@@ -66,7 +76,12 @@ def numerique_dashboard(request):
 def numerique_list(request):
     """Liste des équipements numériques (ancienne vue, gardée pour compatibilité)"""
     from django.db.models import Sum
-    equipements = EquipementNumerique.objects.filter(user=request.user).order_by('-year', 'nom')
+    if request.user.is_staff or request.user.is_superuser:
+        equipements = EquipementNumerique.objects.all().order_by('-year', 'nom')
+    else:
+        # Les agents ne voient que les données de leur(s) groupe(s)
+        equipements = EquipementNumerique.objects.filter(group__in=request.user.groups.all()).order_by('-year', 'nom')
+        
     total_co2 = equipements.aggregate(Sum('total_co2_kg'))['total_co2_kg__sum'] or 0
     
     return render(request, 'numerique/numerique_list.html', {
@@ -82,7 +97,10 @@ def numerique_create(request):
 @login_required
 def numerique_update(request, pk):
     """Modifier un équipement"""
-    numerique = get_object_or_404(EquipementNumerique, pk=pk, user=request.user)
+    if request.user.is_staff or request.user.is_superuser:
+        numerique = get_object_or_404(EquipementNumerique, pk=pk)
+    else:
+        numerique = get_object_or_404(EquipementNumerique, pk=pk, group__in=request.user.groups.all())
     
     if request.method == 'POST':
         form = NumeriqueForm(request.POST, instance=numerique)
@@ -101,7 +119,10 @@ def numerique_update(request, pk):
 @login_required
 def numerique_delete(request, pk):
     """Supprimer un équipement"""
-    numerique = get_object_or_404(EquipementNumerique, pk=pk, user=request.user)
+    if request.user.is_staff or request.user.is_superuser:
+        numerique = get_object_or_404(EquipementNumerique, pk=pk)
+    else:
+        numerique = get_object_or_404(EquipementNumerique, pk=pk, group__in=request.user.groups.all())
     
     if request.method == 'POST':
         numerique.delete()

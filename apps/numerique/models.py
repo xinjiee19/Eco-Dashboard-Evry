@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.utils import timezone
 
 class EquipementNumerique(models.Model):
@@ -48,7 +48,7 @@ class EquipementNumerique(models.Model):
         'SCREEN_EXTRA': 50,
     }
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True)
     year = models.IntegerField(default=timezone.now().year, verbose_name="Année")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -98,4 +98,3 @@ class EquipementNumerique(models.Model):
         verbose_name = "Équipement numérique"
         verbose_name_plural = "Données numérique"
         ordering = ['-year', '-created_at']
-

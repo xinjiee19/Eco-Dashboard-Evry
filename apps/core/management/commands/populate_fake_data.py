@@ -2,13 +2,14 @@ import random
 from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from django.utils import timezone
+from django.contrib.auth.models import Group
 
 # Import models
 from apps.batiment.models import BuildingEnergyData
-from apps.vehicles.models import VehicleData, EmissionFactor as VehicleFactor
+from apps.vehicles.models import VehicleData
 from apps.alimentation.models import FoodEntry, FoodEmissionFactor
 from apps.purchases.models import PurchaseData, PurchaseEmissionFactor
+from apps.numerique.models import EquipementNumerique
 
 User = get_user_model()
 
@@ -18,31 +19,54 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.WARNING("Starting dummy data generation..."))
         
-        # 0. Clean existing data
+        # 0. Clean existing data for a fresh start
         self.stdout.write("Cleaning old data...")
         BuildingEnergyData.objects.all().delete()
         VehicleData.objects.all().delete()
         FoodEntry.objects.all().delete()
         PurchaseData.objects.all().delete()
+        EquipementNumerique.objects.all().delete()
+        User.objects.filter(is_superuser=False).delete()
+        Group.objects.all().delete()
+        User.objects.filter(username='admin_demo').delete()
 
-        # 1. Get or Create User
-        user = User.objects.first()
-        if not user:
-            self.stdout.write("No user found. Creating 'admin_demo'...")
-            user = User.objects.create_superuser('admin_demo', 'admin@demo.com', 'admin')
-        
-        self.stdout.write(f"Assigning data to user: {user.username}")
+        # 1. Create Admin User
+        admin_user = User.objects.create_superuser('admin_demo', 'admin@demo.com', 'admin')
+        self.stdout.write(self.style.SUCCESS(f"Superuser '{admin_user.username}' created. (password: admin)"))
 
-        # 2. Services List
+        # 2. Define Sectors, Create Groups and a sample User for each Group
+        self.stdout.write("Creating groups and a sample user for each sector...")
+        sectors = ["Bâtiments", "Véhicules", "Alimentation", "Achats", "Numérique"]
+        groups = {}
+        for sector_name in sectors:
+            group, _ = Group.objects.get_or_create(name=sector_name)
+            groups[sector_name] = group
+            
+            # Sanitize username
+            username = f"agent_{sector_name.lower().replace('é', 'e').replace('â', 'a')}"
+            user, created = User.objects.get_or_create(
+                username=username, 
+                defaults={'email': f'{username}@demo.com'}
+            )
+            if created:
+                user.set_password('password')
+                user.save()
+            
+            user.groups.add(group)
+            self.stdout.write(f"  - Group '{group.name}' created.")
+            self.stdout.write(f"  - User '{user.username}' created and added to group. (password: password)")
+
+
+        # --- Static Data & Factors ---
+
         services = [
             "Direction des Sports", "Services Techniques", "Mairie Annexe", 
             "Ecole Jules Ferry", "Police Municipale", "C.C.A.S.", 
             "Espaces Verts", "Restauration Scolaire", "Voirie"
         ]
-
         years = [2024, 2025, 2026]
 
-        # 3. Populate Emission Factors for Purchases (if empty)
+        # Populate Emission Factors for Purchases (if empty)
         if not PurchaseEmissionFactor.objects.exists():
             self.stdout.write("Populating Purchase Emission Factors...")
             factors_data = [
@@ -63,7 +87,7 @@ class Command(BaseCommand):
                     factor_kg_co2_per_keur=Decimal(val)
                 )
 
-        # 4. Populate Emission Factors for Food (if empty)
+        # Populate Emission Factors for Food (if empty)
         if not FoodEmissionFactor.objects.exists():
             self.stdout.write("Populating Food Emission Factors...")
             food_factors = [
@@ -81,17 +105,18 @@ class Command(BaseCommand):
                     code=code, label=label, kg_co2_per_meal=Decimal(val)
                 )
         
-        # 5. Populate Data
+        # 3. Populate Sector Data, assigning to the correct group
         
         # --- BATIMENTS ---
         self.stdout.write("Generating Batiment Data...")
+        batiments_group = groups["Bâtiments"]
         for year in years:
             for service in services:
                 # Not every service has a building every year, but let's say yes for demo
                 if random.random() > 0.8: continue
 
                 BuildingEnergyData.objects.create(
-                    user=user,
+                    group=batiments_group,
                     year=year,
                     site_name=f"Bâtiment {service}",
                     construction_year=random.randint(1970, 2010),
@@ -108,13 +133,14 @@ class Command(BaseCommand):
 
         # --- VEHICLES ---
         self.stdout.write("Generating Vehicle Data...")
+        vehicules_group = groups["Véhicules"]
         for year in years:
             for service in services:
                 if random.random() > 0.7: continue
                 
                 method = random.choice(['fuel', 'distance'])
                 entry = VehicleData(
-                    user=user,
+                    group=vehicules_group,
                     year=year,
                     service=service,
                     calculation_method=method
@@ -129,17 +155,18 @@ class Command(BaseCommand):
 
         # --- ALIMENTATION ---
         self.stdout.write("Generating Alimentation Data...")
+        alimentation_group = groups["Alimentation"]
         for year in years:
             for service in services:
                 # Randomly decide if this service has food entry
                 if random.random() > 0.7: continue
                 
                 # Check existance to avoid IntegrityError
-                if FoodEntry.objects.filter(year=year, service=service).exists():
+                if FoodEntry.objects.filter(group=alimentation_group, year=year, service=service).exists():
                     continue
 
                 FoodEntry.objects.create(
-                    user=user,
+                    group=alimentation_group,
                     year=year,
                     service=service,
                     beef_meals=random.randint(500, 5000),
@@ -153,13 +180,14 @@ class Command(BaseCommand):
 
         # --- PURCHASES ---
         self.stdout.write("Generating Purchases Data...")
+        achats_group = groups["Achats"]
         categories = [c[0] for c in PurchaseData.CATEGORY_CHOICES]
         for year in years:
             for service in services:
                 # Create 1-3 purchases per service
                 for _ in range(random.randint(1, 4)):
                     PurchaseData.objects.create(
-                        user=user,
+                        group=achats_group,
                         year=year,
                         service=service,
                         category=random.choice(categories),
@@ -169,10 +197,7 @@ class Command(BaseCommand):
 
         # --- NUMERIQUE ---
         self.stdout.write("Generating Numerique Data...")
-        from apps.numerique.models import EquipementNumerique
-
-        EquipementNumerique.objects.all().delete()
-
+        numerique_group = groups["Numérique"]
         # Realistic brands/models for each type
         marques_by_type = {
             'LAPTOP': ['Dell Latitude 5420', 'HP EliteBook 840', 'Lenovo ThinkPad T14', 'ASUS ExpertBook B9'],
@@ -194,7 +219,7 @@ class Command(BaseCommand):
                     marque = random.choice(marques_by_type[equip_type])
                     
                     EquipementNumerique.objects.create(
-                        user=user,
+                        group=numerique_group,
                         year=year,
                         nom=f"Parc {service} - Lot {random.randint(1,10)}",
                         marque_modele=marque,
@@ -202,5 +227,5 @@ class Command(BaseCommand):
                         quantite=qty,
                         duree_vie=random.randint(3, 7)
                     )
-
+        
         self.stdout.write(self.style.SUCCESS("Successfully generated dummy data!"))

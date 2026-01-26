@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.db import models
+from django.contrib.auth.models import Group
 
 class BuildingEnergyData(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Groupe")
     year = models.PositiveIntegerField(verbose_name="Année")
     site_name = models.CharField(max_length=200, default="Site inconnu", verbose_name="Nom du site")
     surface_area = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="m²", verbose_name="Surface (m²)")

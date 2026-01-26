@@ -182,7 +182,7 @@ webapp/
 # apps/vehicles/models.py
 
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.validators import MinValueValidator
 
 class EmissionFactor(models.Model):
@@ -213,7 +213,13 @@ class VehicleData(models.Model):
     """Données de consommation véhicules"""
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     year = models.IntegerField(default=2024)
-    service = models.CharField(max_length=100, blank=True)
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True, # Permet aux admins de ne pas assigner de groupe si besoin
+        verbose_name="Service / Direction"
+    )
     
     # Méthode par carburant
     essence_liters = models.DecimalField(

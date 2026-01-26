@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User, Group
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -14,8 +15,13 @@ def batiment_form_view(request):
     if request.method == "POST":
         form = BuildingEnergyForm(request.POST)
         if form.is_valid():
+            user_group = request.user.groups.first()
+            if not user_group and not request.user.is_superuser:
+                messages.error(request, "Votre compte n'est associé à aucun groupe. Impossible d'enregistrer.")
+                return redirect('batiment_list')
+
             data = form.save(commit=False)
-            data.user = request.user
+            data.group = user_group
             
             # Application des facteurs d'émission standard (ADEME - France Continentale)
             # Électricité (Mix moyen) : ~0.052 kgCO2e/kWh
@@ -45,7 +51,12 @@ def batiment_form_view(request):
 @login_required
 def batiment_list_view(request):
     """Vue de la liste des données bâtiments"""
-    rows = BuildingEnergyData.objects.filter(user=request.user).order_by("-year", "-created_at")
+    if request.user.is_staff or request.user.is_superuser:
+        rows = BuildingEnergyData.objects.all().order_by("-year", "-created_at")
+    else:
+        # Les agents ne voient que les données de leur(s) groupe(s)
+        rows = BuildingEnergyData.objects.filter(group__in=request.user.groups.all()).order_by("-year", "-created_at")
+    
     total_co2 = sum(float(r.total_co2_kg or 0) for r in rows)
 
     context = {
@@ -59,13 +70,15 @@ def batiment_list_view(request):
 @login_required
 def batiment_form_update(request, pk):
     """Vue de modification d'une donnée bâtiment"""
-    row = get_object_or_404(BuildingEnergyData, pk=pk, user=request.user)
+    if request.user.is_staff or request.user.is_superuser:
+        row = get_object_or_404(BuildingEnergyData, pk=pk)
+    else:
+        row = get_object_or_404(BuildingEnergyData, pk=pk, group__in=request.user.groups.all())
     
     if request.method == "POST":
         form = BuildingEnergyForm(request.POST, instance=row)
         if form.is_valid():
             data = form.save(commit=False)
-            data.user = request.user
             # Factors are already set on create, but we can re-apply or leave them.
             # Here we preserve them unless we want to update them to latest standard.
             # Simplified: just save.
@@ -86,14 +99,20 @@ def batiment_form_update(request, pk):
 @login_required
 def batiment_detail_view(request, pk):
     """Vue détail"""
-    row = get_object_or_404(BuildingEnergyData, pk=pk, user=request.user)
+    if request.user.is_staff or request.user.is_superuser:
+        row = get_object_or_404(BuildingEnergyData, pk=pk)
+    else:
+        row = get_object_or_404(BuildingEnergyData, pk=pk, group__in=request.user.groups.all())
     return render(request, "batiment/detail.html", {"row": row})
 
 
 @login_required
 def batiment_delete_view(request, pk):
     """Vue suppression"""
-    row = get_object_or_404(BuildingEnergyData, pk=pk, user=request.user)
+    if request.user.is_staff or request.user.is_superuser:
+        row = get_object_or_404(BuildingEnergyData, pk=pk)
+    else:
+        row = get_object_or_404(BuildingEnergyData, pk=pk, group__in=request.user.groups.all())
 
     if request.method == "POST":
         row.delete()
