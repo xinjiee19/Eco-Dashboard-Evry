@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User, Group
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -15,13 +14,17 @@ def batiment_form_view(request):
     if request.method == "POST":
         form = BuildingEnergyForm(request.POST)
         if form.is_valid():
-            user_group = request.user.groups.first()
-            if not user_group and not request.user.is_superuser:
-                messages.error(request, "Votre compte n'est associé à aucun groupe. Impossible d'enregistrer.")
-                return redirect('batiment_list')
-
             data = form.save(commit=False)
-            data.group = user_group
+            data.user = request.user
+            
+            # Assign Group
+            user_group = request.user.groups.first()
+            if user_group:
+                data.group = user_group
+            elif not request.user.is_superuser:
+                 messages.error(request, "Votre compte n'est associé à aucun groupe.")
+                 return redirect('batiment_list')
+
             
             # Application des facteurs d'émission standard (ADEME - France Continentale)
             # Électricité (Mix moyen) : ~0.052 kgCO2e/kWh
@@ -44,7 +47,11 @@ def batiment_form_view(request):
     else:
         form = BuildingEnergyForm()
 
-    context = {"form": form}
+    # Récupérer les facteurs pour affichage dans le tableau
+    from .models import BuildingEmissionFactor
+    emission_factors = BuildingEmissionFactor.objects.all()
+    
+    context = {"form": form, "emission_factors": emission_factors}
     return render(request, "batiment/form.html", context)
 
 
@@ -54,9 +61,7 @@ def batiment_list_view(request):
     if request.user.is_staff or request.user.is_superuser:
         rows = BuildingEnergyData.objects.all().order_by("-year", "-created_at")
     else:
-        # Les agents ne voient que les données de leur(s) groupe(s)
         rows = BuildingEnergyData.objects.filter(group__in=request.user.groups.all()).order_by("-year", "-created_at")
-    
     total_co2 = sum(float(r.total_co2_kg or 0) for r in rows)
 
     context = {
@@ -79,6 +84,7 @@ def batiment_form_update(request, pk):
         form = BuildingEnergyForm(request.POST, instance=row)
         if form.is_valid():
             data = form.save(commit=False)
+            data.user = request.user
             # Factors are already set on create, but we can re-apply or leave them.
             # Here we preserve them unless we want to update them to latest standard.
             # Simplified: just save.
@@ -92,7 +98,11 @@ def batiment_form_update(request, pk):
     else:
         form = BuildingEnergyForm(instance=row)
 
-    context = {"form": form}
+    # Récupérer les facteurs pour affichage
+    from .models import BuildingEmissionFactor
+    emission_factors = BuildingEmissionFactor.objects.all()
+
+    context = {"form": form, "emission_factors": emission_factors}
     return render(request, "batiment/form.html", context)
 
 

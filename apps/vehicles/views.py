@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User, Group
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -20,14 +19,16 @@ def vehicle_form_view(request):
             form = VehicleDistanceForm(request.POST)
         
         if form.is_valid():
-            user_group = request.user.groups.first()
-            if not user_group and not request.user.is_superuser:
-                messages.error(request, "Votre compte n'est associé à aucun groupe. Impossible d'enregistrer.")
-                return redirect('vehicle_list')
-
             vehicle_data = form.save(commit=False)
-            vehicle_data.group = user_group
             vehicle_data.user = request.user
+            
+            # Assign Group
+            user_group = request.user.groups.first()
+            if user_group:
+                vehicle_data.group = user_group
+            elif not request.user.is_superuser:
+                 messages.error(request, "Attention: aucun groupe associé.")
+
             vehicle_data.calculation_method = form.cleaned_data['calculation_method']
             vehicle_data.save()
             
@@ -59,7 +60,6 @@ def vehicle_list_view(request):
     if request.user.is_staff or request.user.is_superuser:
         vehicle_data = VehicleData.objects.all().order_by('-year', '-created_at')
     else:
-        # Les agents ne voient que les données de leur(s) groupe(s)
         vehicle_data = VehicleData.objects.filter(group__in=request.user.groups.all()).order_by('-year', '-created_at')
     
     # Calculer le total
@@ -90,6 +90,8 @@ def vehicle_form_update(request, pk):
             
         if form.is_valid():
             vehicle_data = form.save(commit=False)
+            vehicle_data.user = request.user
+            # method doesn't change
             vehicle_data.save()
             messages.success(request, '✅ Donnée modifiée avec succès.')
             return redirect('vehicle_list')
@@ -109,6 +111,7 @@ def vehicle_form_update(request, pk):
 
 @login_required
 def vehicle_detail_view(request, pk):
+    """Vue de détail d'une donnée véhicule"""
     if request.user.is_staff or request.user.is_superuser:
         vehicle_data = get_object_or_404(VehicleData, pk=pk)
     else:

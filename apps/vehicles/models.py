@@ -41,7 +41,7 @@ class EmissionFactor(models.Model):
     )
     source = models.CharField(
         max_length=200,
-        default="ADEME Base Carbone",
+        default="ADEME",
         verbose_name="Source"
     )
     source_url = models.URLField(
@@ -63,8 +63,8 @@ class EmissionFactor(models.Model):
     )
     
     class Meta:
-        verbose_name = "Facteur d'émission"
-        verbose_name_plural = "Facteurs d'émission"
+        verbose_name = "Facteur Émission Véhicules"
+        verbose_name_plural = "Facteurs Émission Véhicules"
         ordering = ['category', 'name']
     
     def __str__(self):
@@ -80,17 +80,17 @@ class VehicleData(models.Model):
         ('distance', 'Par distance'),
     ]
     
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Utilisateur"
+    )
     group = models.ForeignKey(
         Group,
         on_delete=models.CASCADE,
-        verbose_name="Groupe",
-        null=True, blank=True
-    )
-    user = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
         null=True,
-        verbose_name="Créé par"
+        blank=True,
+        verbose_name="Groupe"
     )
     year = models.IntegerField(
         default=2026,
@@ -180,29 +180,48 @@ class VehicleData(models.Model):
     class Meta:
         verbose_name = "Donnée véhicule"
         verbose_name_plural = "Données véhicules"
-        ordering = ['-year', '-created_at']
-        unique_together = [['group', 'year', 'service']]
+        ordering = ['-created_at']
+        unique_together = [['user', 'year', 'service']]
     
     def __str__(self):
-        return f"{self.service or 'Service'} - {self.year} ({self.group.name if self.group else 'N/A'})"
+        return f"{self.service or 'Service'} - {self.year} ({self.user.username})"
     
     def calculate_impact(self):
-        """Calcule l'impact carbone total"""
-        # Facteurs ADEME vérifiés
-        FACTEUR_ESSENCE = Decimal('2.79')  # kg CO₂e/L
-        FACTEUR_GAZOLE = Decimal('3.16')   # kg CO₂e/L
-        FACTEUR_KM = Decimal('0.192')      # kg CO₂e/km (voiture thermique)
+        """Calcule l'impact carbone total en utilisant les facteurs en base"""
+        from .models import EmissionFactor  # Import local
+
+        # Valeurs par défaut (au cas où la base est vide ou erreur)
+        default_essence = Decimal('2.79')
+        default_gazole = Decimal('3.16')
+        default_km = Decimal('0.192')
+
+        # Récupération dynamique
+        # On essaie de trouver par nom exact (créé par migration)
+        # Note: Dans un vrai projet on utiliserait des codes/slugs immuables plutôt que des noms
+        try:
+            f_essence = EmissionFactor.objects.filter(name='Essence').first()
+            val_essence = f_essence.factor_value if f_essence else default_essence
+            
+            f_gazole = EmissionFactor.objects.filter(name='Gazole').first()
+            val_gazole = f_gazole.factor_value if f_gazole else default_gazole
+            
+            f_km = EmissionFactor.objects.filter(name='Voiture thermique moyenne').first()
+            val_km = f_km.factor_value if f_km else default_km
+        except Exception:
+            val_essence = default_essence
+            val_gazole = default_gazole
+            val_km = default_km
         
         if self.calculation_method == 'fuel':
-            essence_impact = (self.essence_liters or Decimal('0')) * FACTEUR_ESSENCE
-            gazole_impact = (self.gazole_liters or Decimal('0')) * FACTEUR_GAZOLE
+            essence_impact = (self.essence_liters or Decimal('0')) * val_essence
+            gazole_impact = (self.gazole_liters or Decimal('0')) * val_gazole
             
             self.essence_co2_kg = essence_impact
             self.gazole_co2_kg = gazole_impact
             self.total_co2_kg = essence_impact + gazole_impact
         
         elif self.calculation_method == 'distance':
-            self.total_co2_kg = (self.distance_km or Decimal('0')) * FACTEUR_KM
+            self.total_co2_kg = (self.distance_km or Decimal('0')) * val_km
         
         return self.total_co2_kg
     

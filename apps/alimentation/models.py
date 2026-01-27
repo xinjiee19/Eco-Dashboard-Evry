@@ -1,8 +1,7 @@
-# apps/alimentation/models.py
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
 from django.contrib.auth.models import Group
+from django.core.validators import MinValueValidator
 
 User = get_user_model()
 
@@ -19,12 +18,12 @@ class FoodEmissionFactor(models.Model):
     )
     source = models.CharField(
         max_length=200,
-        default="ADEME Base Carbone / Agribalyse"
+        default="ADEME"
     )
 
     class Meta:
-        verbose_name = "Facteur d'émission repas"
-        verbose_name_plural = "Facteurs d'émission repas"
+        verbose_name = "Facteur Émission Alimentation"
+        verbose_name_plural = "Facteurs Émission Alimentation"
 
     def __str__(self):
         return f"{self.label} ({self.kg_co2_per_meal} kgCO2e/repas)"
@@ -36,7 +35,8 @@ class FoodEntry(models.Model):
     """
     YEAR_CHOICES = [(y, y) for y in range(2020, 2036)]
 
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Groupe")
     service = models.CharField(max_length=150)
     year = models.IntegerField(choices=YEAR_CHOICES)
 
@@ -72,7 +72,7 @@ class FoodEntry(models.Model):
         verbose_name = "Donnée alimentation"
         verbose_name_plural = "Données alimentation"
         ordering = ["-year", "service"]
-        unique_together = ("group", "service", "year")
+        unique_together = ("service", "year")
 
     def __str__(self):
         return f"{self.service} - {self.year} ({self.total_meals()} repas)"

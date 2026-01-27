@@ -26,13 +26,13 @@ class PurchaseEmissionFactor(models.Model):
     )
     source = models.CharField(
         max_length=300,
-        default="Excel Achats 30% - ADEME",
+        default="ADEME",
         verbose_name="Source"
     )
     
     class Meta:
-        verbose_name = "Facteur d'émission achat"
-        verbose_name_plural = "Facteurs d'émission achats"
+        verbose_name = "Facteur Émission Achats"
+        verbose_name_plural = "Facteurs Émission Achats"
         ordering = ['category_label']
     
     def __str__(self):
@@ -58,11 +58,17 @@ class PurchaseData(models.Model):
     ]
     
     # Métadonnées
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Utilisateur"
+    )
     group = models.ForeignKey(
         Group,
         on_delete=models.CASCADE,
-        verbose_name="Groupe",
-        null=True, blank=True
+        null=True,
+        blank=True,
+        verbose_name="Groupe"
     )
     
     year = models.IntegerField(

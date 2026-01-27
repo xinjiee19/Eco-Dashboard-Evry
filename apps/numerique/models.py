@@ -2,53 +2,48 @@ from django.db import models
 from django.contrib.auth.models import User, Group
 from django.utils import timezone
 
+
+class NumeriqueEmissionFactor(models.Model):
+    """Facteurs d'émission pour le numérique (stockés en base)"""
+    type_equipement = models.CharField(max_length=50, unique=True, verbose_name="Code Type")
+    nom = models.CharField(max_length=100, verbose_name="Libellé")
+    
+    # Valeurs
+    fabrication_kg_co2 = models.DecimalField(max_digits=10, decimal_places=2, help_text="Empreinte fabrication (kg CO2e)")
+    conso_kwh_an = models.DecimalField(max_digits=10, decimal_places=2, help_text="Conso électrique annuelle moyenne (kWh)")
+    
+    source = models.CharField(max_length=200, default="ADEME", blank=True)
+    
+    def __str__(self):
+        return f"{self.nom} (Fab: {self.fabrication_kg_co2} kg, Conso: {self.conso_kwh_an} kWh)"
+
+    class Meta:
+        verbose_name = "Facteur Émission Numérique"
+        verbose_name_plural = "Facteurs Émission Numérique"
+
 class EquipementNumerique(models.Model):
     TYPE_CHOICES = [
         ('1. Hardware (Terminaux)', (
-            ('LAPTOP', 'Ordinateur Portable (250kg CO2e)'),
-            ('DESKTOP_SCREEN', 'Ordinateur Fixe + Écran (350kg CO2e)'),
-            ('SMARTPHONE', 'Smartphone / Tablette (50kg CO2e)'),
+            ('LAPTOP', 'Ordinateur Portable'),
+            ('DESKTOP_SCREEN', 'Ordinateur Fixe + Écran'),
+            ('SMARTPHONE', 'Smartphone / Tablette'),
         )),
         ('2. Réseau', (
-            ('BORNE_WIFI', 'Borne Wi-Fi (20kg CO2e)'),
-            ('SWITCH', 'Switch réseau (80kg CO2e)'),
+            ('BORNE_WIFI', 'Borne Wi-Fi'),
+            ('SWITCH', 'Switch réseau'),
         )),
         ('3. Cloud & Services', (
-            ('CLOUD_INSTANCE', 'Instance Cloud / Serveur virtuel (500kg CO2e)'),
-            ('CLOUD_STORAGE', 'Stockage Cloud 1 To (150kg CO2e)'),
+            ('CLOUD_INSTANCE', 'Instance Cloud / Serveur virtuel'),
+            ('CLOUD_STORAGE', 'Stockage Cloud 1 To'),
         )),
         ('4. Périphériques', (
-            ('PRINTER', 'Imprimante Laser (500kg CO2e)'),
-            ('SCREEN_EXTRA', 'Écran supplémentaire (200kg CO2e)'),
+            ('PRINTER', 'Imprimante Laser'),
+            ('SCREEN_EXTRA', 'Écran supplémentaire'),
         )),
     ]
     
-    # Données ADEME (Fabrication en kg CO2e total)
-    FAB_CO2 = {
-        'LAPTOP': 250, 
-        'DESKTOP_SCREEN': 350, 
-        'SMARTPHONE': 50,
-        'BORNE_WIFI': 20, 
-        'SWITCH': 80,
-        'CLOUD_INSTANCE': 500, 
-        'CLOUD_STORAGE': 150,
-        'PRINTER': 500, 
-        'SCREEN_EXTRA': 200,
-    }
-    # Consommation moyenne (kWh/an)
-    CONSO_MOYENNE = {
-        'LAPTOP': 30, 
-        'DESKTOP_SCREEN': 170, 
-        'SMARTPHONE': 5,
-        'BORNE_WIFI': 50, 
-        'SWITCH': 100,
-        'CLOUD_INSTANCE': 0,  # Cloud: conso incluse dans le facteur total souvent, ou gérée ailleurs
-        'CLOUD_STORAGE': 0,
-        'PRINTER': 200, 
-        'SCREEN_EXTRA': 50,
-    }
-
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Groupe")
     year = models.IntegerField(default=timezone.now().year, verbose_name="Année")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -65,27 +60,42 @@ class EquipementNumerique(models.Model):
     total_co2_kg = models.FloatField(default=0, editable=False, help_text="Empreinte annuelle amortie + Usage")
 
     def save(self, *args, **kwargs):
-        # Calcul Fabrication
-        facteur_fab = self.FAB_CO2.get(self.type_equipement, 0)
-        self.empreinte_fabrication = facteur_fab * self.quantite
-        
-        # Calcul Consommation (Usage kWh)
-        facteur_conso = self.CONSO_MOYENNE.get(self.type_equipement, 0)
-        self.consommation_annuelle = facteur_conso * self.quantite
+        # Récupérer le facteur en base
+        try:
+            # On utilise le code stocké dans type_equipement pour trouver le facteur
+            factor = NumeriqueEmissionFactor.objects.get(type_equipement=self.type_equipement)
+            
+            # Calcul Fabrication
+            # Note: factor.valeur est Decimal, on convertit en float pour calculs
+            self.empreinte_fabrication = float(factor.fabrication_kg_co2) * self.quantite
+            
+            # Calcul Consommation (Usage kWh)
+            self.consommation_annuelle = float(factor.conso_kwh_an) * self.quantite
+            
+        except NumeriqueEmissionFactor.DoesNotExist:
+            # Sécurité : si facteur non trouvé, on met 0 (ou on pourrait logguer une erreur)
+            self.empreinte_fabrication = 0
+            self.consommation_annuelle = 0
 
         # Calcul Total Annuel = (Fab / Durée) + (Conso * Facteur Elec)
         amortissement = self.empreinte_fabrication / max(self.duree_vie, 1)
         
-        # Facteur Elec France 2024 (approx 0.052 kg/kWh)
-        FACTEUR_ELEC = 0.052 
+        # Facteur Elec France (récupéré depuis le module Bâtiment ou défaut 0.052)
+        try:
+            from apps.batiment.models import BuildingEmissionFactor
+            elec_factor_obj = BuildingEmissionFactor.objects.filter(type_energie='ELEC').first()
+            if elec_factor_obj:
+                FACTEUR_ELEC = float(elec_factor_obj.facteur)
+            else:
+                FACTEUR_ELEC = 0.052
+        except Exception:
+            FACTEUR_ELEC = 0.052
+
         usage_co2 = self.consommation_annuelle * FACTEUR_ELEC
         
-        # Pour les services Cloud, souvent 100% est considéré comme impact annuel (abonnement)
-        if 'CLOUD' in self.type_equipement:
-            # Si c'est du cloud, on considère que la valeur FAB_CO2 est annuelle (ex: location serveur)
-            # Donc pas d'amortissement sur 5 ans par défaut ?
-            # On va suivre la logique : Fab / Durée. Si durée = 1 an, c'est tout bon.
-            pass
+        # Pour les services Cloud, on considère souvent que l'abonnement annuel inclut tout
+        # Ici on simplifie en traitant comme du matériel amorti sur durée_vie
+        # Si durée_vie = 1 an, alors amortissement = fabrication totale (abonnement annuel)
 
         self.total_co2_kg = amortissement + usage_co2
         

@@ -1,9 +1,8 @@
-from django.contrib.auth.models import User, Group
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum
-from .models import EquipementNumerique
+from .models import EquipementNumerique, NumeriqueEmissionFactor
 from .forms import NumeriqueForm
 import json
 
@@ -13,13 +12,11 @@ def numerique_dashboard(request):
     if request.method == 'POST':
         form = NumeriqueForm(request.POST)
         if form.is_valid():
-            user_group = request.user.groups.first()
-            if not user_group and not request.user.is_superuser:
-                messages.error(request, "Votre compte n'est associé à aucun groupe. Impossible d'enregistrer.")
-                return redirect('numerique_dashboard')
-
             numerique = form.save(commit=False)
-            numerique.group = user_group
+            numerique.user = request.user
+            user_group = request.user.groups.first()
+            if user_group:
+                numerique.group = user_group
             numerique.save()
             messages.success(request, '✅ Équipement ajouté avec succès !')
             return redirect('numerique_dashboard')
@@ -27,11 +24,10 @@ def numerique_dashboard(request):
         from django.utils import timezone
         form = NumeriqueForm(initial={'year': timezone.now().year})
     
-    # Récupérer tous les équipements en fonction du rôle de l'utilisateur
+    # Récupérer tous les équipements de l'utilisateur
     if request.user.is_staff or request.user.is_superuser:
         equipements = EquipementNumerique.objects.all().order_by('-created_at')
     else:
-        # Les agents ne voient que les données de leur(s) groupe(s)
         equipements = EquipementNumerique.objects.filter(group__in=request.user.groups.all()).order_by('-created_at')
     
     # Calcul des totaux
@@ -69,7 +65,9 @@ def numerique_dashboard(request):
         'total_conso': total_conso,
         'chart_labels': json.dumps(chart_labels),
         'chart_fab_data': json.dumps(chart_fab_data),
+        'chart_fab_data': json.dumps(chart_fab_data),
         'chart_conso_data': json.dumps(chart_conso_data),
+        'emission_factors': NumeriqueEmissionFactor.objects.all(),
     })
 
 @login_required
@@ -79,9 +77,7 @@ def numerique_list(request):
     if request.user.is_staff or request.user.is_superuser:
         equipements = EquipementNumerique.objects.all().order_by('-year', 'nom')
     else:
-        # Les agents ne voient que les données de leur(s) groupe(s)
         equipements = EquipementNumerique.objects.filter(group__in=request.user.groups.all()).order_by('-year', 'nom')
-        
     total_co2 = equipements.aggregate(Sum('total_co2_kg'))['total_co2_kg__sum'] or 0
     
     return render(request, 'numerique/numerique_list.html', {
@@ -113,7 +109,8 @@ def numerique_update(request, pk):
     
     return render(request, 'numerique/numerique_form.html', {
         'form': form,
-        'title': 'Modifier Équipement'
+        'title': 'Modifier Équipement',
+        'emission_factors': NumeriqueEmissionFactor.objects.all(),
     })
 
 @login_required

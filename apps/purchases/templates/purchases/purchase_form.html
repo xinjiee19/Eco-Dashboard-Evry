@@ -5,11 +5,18 @@
 
 {% block content %}
 <div class="container">
-    <div class="page-header">
-        <h2 class="page-title">🛒 Saisie Données Achats & Marchés</h2>
-        <a href="{% url 'purchase_list' %}" class="btn btn--secondary">
-            ← Retour à la liste
-        </a>
+    <div class="page-header"
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #dee2e6;">
+        <h2 class="page-title" style="color: #2d6a4f; margin: 0; font-size: 1.75rem;">🛒 Saisie Données Achats & Marchés
+        </h2>
+        <div style="display: flex; gap: 10px;">
+            <a href="{% url 'purchase_list' %}" class="btn btn--secondary">
+                👁️ Voir liste des données
+            </a>
+            <a href="{% url 'dashboard' %}" class="btn btn--secondary">
+                🏠 Retourner au dashboard
+            </a>
+        </div>
     </div>
 
     <!-- Form card -->
@@ -58,7 +65,7 @@
                 <button type="submit" class="btn btn--primary btn--large">
                     💾 Enregistrer
                 </button>
-                <a href="{% url 'purchase_list' %}" class="btn btn--secondary">
+                <a href="{% url 'dashboard' %}" class="btn btn--secondary">
                     Annuler
                 </a>
             </div>
@@ -77,51 +84,17 @@
                 </tr>
             </thead>
             <tbody>
+                {% for factor in emission_factors_list %}
                 <tr>
-                    <td>🍽️ Restauration & Services légers</td>
-                    <td>100</td>
+                    <td>🛒 {{ factor.category_label }}</td>
+                    <td>{{ factor.factor_kg_co2_per_keur|floatformat:0 }}</td>
                     <td>kg CO₂e/k€</td>
                 </tr>
+                {% empty %}
                 <tr>
-                    <td>📄 Assurances & Cotisations</td>
-                    <td>110</td>
-                    <td>kg CO₂e/k€</td>
+                    <td colspan="3" style="text-align: center;">Aucun facteur défini.</td>
                 </tr>
-                <tr>
-                    <td>💻 IT & Téléphonie</td>
-                    <td>160</td>
-                    <td>kg CO₂e/k€</td>
-                </tr>
-                <tr>
-                    <td>🧹 Nettoyage & Espaces verts</td>
-                    <td>215</td>
-                    <td>kg CO₂e/k€</td>
-                </tr>
-                <tr>
-                    <td>🎪 Séjours & Activités</td>
-                    <td>270</td>
-                    <td>kg CO₂e/k€</td>
-                </tr>
-                <tr>
-                    <td>👕 Blanchisserie</td>
-                    <td>320</td>
-                    <td>kg CO₂e/k€</td>
-                </tr>
-                <tr>
-                    <td>🏗️ Travaux & Construction</td>
-                    <td>360</td>
-                    <td>kg CO₂e/k€</td>
-                </tr>
-                <tr>
-                    <td>🚌 Transports</td>
-                    <td>560</td>
-                    <td>kg CO₂e/k€</td>
-                </tr>
-                <tr>
-                    <td>🚜 Location équipements</td>
-                    <td>600</td>
-                    <td>kg CO₂e/k€</td>
-                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
@@ -228,34 +201,7 @@
         margin-bottom: 1rem;
     }
 
-    .factors-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 4px;
-        overflow: hidden;
-    }
 
-    .factors-table th,
-    .factors-table td {
-        padding: 0.75rem;
-        text-align: left;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .factors-table th {
-        background: var(--bg-main);
-        font-weight: 600;
-        color: var(--text-dark);
-    }
-
-    .factors-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    .factors-table tbody tr:hover {
-        background: #f8f9fa;
-    }
 
     .alert {
         padding: 1rem;

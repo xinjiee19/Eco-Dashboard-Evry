@@ -4,7 +4,8 @@ from .models import EmissionFactor, VehicleData
 
 @admin.register(EmissionFactor)
 class EmissionFactorAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'factor_value', 'unit', 'source', 'is_active']
+    list_display = ['name', 'category', 'factor_value', 'unit', 'source']
+    list_editable = ['factor_value']
     list_filter = ['category', 'is_active']
     search_fields = ['name', 'subcategory']
     ordering = ['category', 'name']
@@ -22,17 +23,17 @@ class EmissionFactorAdmin(admin.ModelAdmin):
 @admin.register(VehicleData)
 class VehicleDataAdmin(admin.ModelAdmin):
     list_display = [
-        'year', 'service', 'group', 'user', 'calculation_method',
+        'year', 'service', 'user', 'calculation_method',
         'total_co2_kg', 'created_at'
     ]
-    list_filter = ['year', 'calculation_method', 'service', 'group', 'user']
-    search_fields = ['service', 'group__name', 'notes', 'user__username']
+    list_filter = ['year', 'calculation_method', 'service']
+    search_fields = ['service', 'user__username', 'notes']
     ordering = ['-year', '-created_at']
-    readonly_fields = ['user', 'total_co2_kg', 'essence_co2_kg', 'gazole_co2_kg', 'created_at', 'updated_at']
+    readonly_fields = ['total_co2_kg', 'essence_co2_kg', 'gazole_co2_kg', 'created_at', 'updated_at']
     
     fieldsets = (
         ('Informations générales', {
-            'fields': ('group', 'user', 'year', 'service', 'calculation_method')
+            'fields': ('user', 'year', 'service', 'calculation_method')
         }),
         ('Méthode par carburant', {
             'fields': ('essence_liters', 'gazole_liters'),
@@ -51,3 +52,9 @@ class VehicleDataAdmin(admin.ModelAdmin):
             'classes': ['collapse'],
         }),
     )
+    
+    def save_model(self, request, obj, form, change):
+        """Auto-assigne l'utilisateur si non défini"""
+        if not obj.user_id:
+            obj.user = request.user
+        super().save_model(request, obj, form, change)

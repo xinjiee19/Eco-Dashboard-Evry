@@ -98,26 +98,17 @@
                 </tr>
             </thead>
             <tbody>
+                {% for factor in emission_factors %}
                 <tr>
-                    <td>💻 Ordinateur Portable</td>
-                    <td>250 kg</td>
-                    <td>30 kWh</td>
+                    <td>💻 {{ factor.nom }}</td>
+                    <td>{{ factor.fabrication_kg_co2|floatformat:0 }} kg</td>
+                    <td>{{ factor.conso_kwh_an|floatformat:0 }} kWh</td>
                 </tr>
+                {% empty %}
                 <tr>
-                    <td>🖥️ Ordi Fixe + Écran</td>
-                    <td>350 kg</td>
-                    <td>170 kWh</td>
+                    <td colspan="3" style="text-align: center;">Aucun facteur défini.</td>
                 </tr>
-                <tr>
-                    <td>📱 Smartphone</td>
-                    <td>50 kg</td>
-                    <td>5 kWh</td>
-                </tr>
-                <tr>
-                    <td>☁️ Serveur Virtuel</td>
-                    <td>500 kg</td>
-                    <td>(Inclus)</td>
-                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
@@ -226,25 +217,7 @@
         border-left: 4px solid var(--primary, #2d6a4f);
     }
 
-    .factors-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 1rem;
-        font-size: 0.9rem;
-    }
 
-    .factors-table th {
-        text-align: left;
-        padding: 0.5rem;
-        border-bottom: 2px solid #ddd;
-        color: #2d6a4f;
-    }
-
-    .factors-table td {
-        padding: 0.5rem;
-        border-bottom: 1px solid #eee;
-        color: #555;
-    }
 
     @media (max-width: 768px) {
         .form-row {

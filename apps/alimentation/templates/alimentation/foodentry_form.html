@@ -4,11 +4,18 @@
 
 {% block content %}
 <div class="container">
-    <div class="page-header">
-        <h2 class="page-title">🍽️ Saisie Données Alimentation</h2>
-        <a href="{% url 'food_list' %}" class="btn btn--secondary">
-            ← Retour à la liste
-        </a>
+    <div class="page-header"
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #dee2e6;">
+        <h2 class="page-title" style="color: #2d6a4f; margin: 0; font-size: 1.75rem;">🍽️ Saisie Données Alimentation
+        </h2>
+        <div style="display: flex; gap: 10px;">
+            <a href="{% url 'food_list' %}" class="btn btn--secondary">
+                👁️ Voir liste des données
+            </a>
+            <a href="{% url 'dashboard' %}" class="btn btn--secondary">
+                🏠 Retourner au dashboard
+            </a>
+        </div>
     </div>
 
     <div class="form-card">
@@ -88,7 +95,7 @@
                 <button type="submit" class="btn btn--primary btn--large">
                     💾 Enregistrer
                 </button>
-                <a href="{% url 'food_list' %}" class="btn btn--secondary">
+                <a href="{% url 'dashboard' %}" class="btn btn--secondary">
                     Annuler
                 </a>
             </div>
@@ -103,25 +110,21 @@
                 <tr>
                     <th>Type de repas</th>
                     <th>Impact carbone</th>
+                    <th>Unité</th>
                 </tr>
             </thead>
             <tbody>
+                {% for factor in emission_factors %}
                 <tr>
-                    <td>🥩 Bœuf / Veau</td>
-                    <td>Impact le plus élevé (méthane)</td>
+                    <td>{{ factor.label }}</td>
+                    <td>{{ factor.kg_co2_per_meal }}</td>
+                    <td>kgCO₂e/repas</td>
                 </tr>
+                {% empty %}
                 <tr>
-                    <td>🐷 Porc</td>
-                    <td>Impact intermédiaire</td>
+                    <td colspan="3" style="text-align: center;">Aucun facteur défini.</td>
                 </tr>
-                <tr>
-                    <td>🐔 Volaille / Poisson</td>
-                    <td>Impact plus faible</td>
-                </tr>
-                <tr>
-                    <td>🥗 Végétarien</td>
-                    <td>Impact très faible (&lt; 1 kgCO₂e/repas)</td>
-                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>

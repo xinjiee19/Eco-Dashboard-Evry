@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User, Group
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -12,13 +11,11 @@ def purchase_form(request):
     if request.method == 'POST':
         form = PurchaseDataForm(request.POST)
         if form.is_valid():
-            user_group = request.user.groups.first()
-            if not user_group and not request.user.is_superuser:
-                messages.error(request, "Votre compte n'est associé à aucun groupe. Impossible d'enregistrer.")
-                return redirect('purchase_list')
-
             purchase = form.save(commit=False)
-            purchase.group = user_group
+            purchase.user = request.user
+            user_group = request.user.groups.first()
+            if user_group:
+                purchase.group = user_group
             purchase.save()
             
             messages.success(
@@ -38,7 +35,8 @@ def purchase_form(request):
     
     return render(request, 'purchases/purchase_form.html', {
         'form': form,
-        'emission_factors': emission_factors
+        'emission_factors': emission_factors,
+        'emission_factors_list': emission_factors_qs
     })
 
 
@@ -49,7 +47,6 @@ def purchase_list(request):
     if request.user.is_staff or request.user.is_superuser:
         purchases = PurchaseData.objects.all()
     else:
-        # Les agents ne voient que les données de leur(s) groupe(s)
         purchases = PurchaseData.objects.filter(group__in=request.user.groups.all())
     
     # Statistiques
@@ -88,7 +85,9 @@ def purchase_update(request, pk):
     if request.method == 'POST':
         form = PurchaseDataForm(request.POST, instance=purchase)
         if form.is_valid():
-            form.save()
+            p = form.save(commit=False)
+            p.user = request.user
+            p.save()
             messages.success(request, '✅ Achat modifié avec succès !')
             return redirect('purchase_list')
     else:
@@ -103,7 +102,8 @@ def purchase_update(request, pk):
     
     return render(request, 'purchases/purchase_form.html', {
         'form': form,
-        'emission_factors': emission_factors
+        'emission_factors': emission_factors,
+        'emission_factors_list': emission_factors_qs
     })
 
 @login_required

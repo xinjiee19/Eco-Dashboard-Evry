@@ -5,11 +5,17 @@
 
 {% block content %}
 <div class="container">
-    <div class="page-header">
-        <h2 class="page-title">🚗 Saisie Données Véhicules</h2>
-        <a href="{% url 'vehicle_list' %}" class="btn btn--secondary">
-            ← Retour à la liste
-        </a>
+    <div class="page-header"
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #dee2e6;">
+        <h2 class="page-title" style="color: #2d6a4f; margin: 0; font-size: 1.75rem;">🚗 Saisie Données Véhicules</h2>
+        <div style="display: flex; gap: 10px;">
+            <a href="{% url 'vehicle_list' %}" class="btn btn--secondary">
+                👁️ Voir liste des données
+            </a>
+            <a href="{% url 'dashboard' %}" class="btn btn--secondary">
+                🏠 Retourner au dashboard
+            </a>
+        </div>
     </div>
 
     <!-- Method selector -->
@@ -77,10 +83,10 @@
             {% endfor %}
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary btn-large">
+                <button type="submit" class="btn btn--primary btn--large">
                     💾 Enregistrer
                 </button>
-                <a href="{% url 'vehicle_list' %}" class="btn btn-secondary">
+                <a href="{% url 'dashboard' %}" class="btn btn--secondary">
                     Annuler
                 </a>
             </div>
@@ -96,7 +102,6 @@
                     <th>Type</th>
                     <th>Facteur</th>
                     <th>Unité</th>
-                    <th>Source</th>
                 </tr>
             </thead>
             <tbody>
@@ -105,7 +110,6 @@
                     <td>⛽ {{ factor.name }}</td>
                     <td>{{ factor.factor_value }}</td>
                     <td>kg CO₂e/{{ factor.unit }}</td>
-                    <td>{{ factor.source }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -238,6 +242,11 @@
         border-top: 1px solid var(--border);
     }
 
+    .btn--large {
+        padding: 1rem 2rem;
+        font-size: 1.05rem;
+    }
+
     .info-box {
         background: #f8f9fa;
         padding: 1.5rem;
@@ -250,34 +259,7 @@
         margin-bottom: 1rem;
     }
 
-    .factors-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 4px;
-        overflow: hidden;
-    }
 
-    .factors-table th,
-    .factors-table td {
-        padding: 0.75rem;
-        text-align: left;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .factors-table th {
-        background: var(--bg-main);
-        font-weight: 600;
-        color: var(--text-dark);
-    }
-
-    .factors-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    .factors-table tbody tr:hover {
-        background: #f8f9fa;
-    }
 
     .alert {
         padding: 1rem;

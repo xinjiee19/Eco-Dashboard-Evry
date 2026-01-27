@@ -4,11 +4,17 @@
 
 {% block content %}
 <div class="container">
-  <div class="page-header">
-    <h2 class="page-title">🏢 Saisie Bâtiments & Énergies</h2>
-    <a href="{% url 'batiment_list' %}" class="btn btn-secondary">
-      ← Retour à la liste
-    </a>
+  <div class="page-header"
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #dee2e6;">
+    <h2 class="page-title" style="color: #2d6a4f; margin: 0; font-size: 1.75rem;">🏢 Saisie Bâtiments & Énergies</h2>
+    <div style="display: flex; gap: 10px;">
+      <a href="{% url 'batiment_list' %}" class="btn btn--secondary">
+        👁️ Voir liste des données
+      </a>
+      <a href="{% url 'dashboard' %}" class="btn btn--secondary">
+        🏠 Retourner au dashboard
+      </a>
+    </div>
   </div>
 
   <div class="form-card">
@@ -94,7 +100,7 @@
         <button type="submit" class="btn btn--primary btn--large">
           💾 Enregistrer
         </button>
-        <a href="{% url 'batiment_list' %}" class="btn btn--secondary">
+        <a href="{% url 'dashboard' %}" class="btn btn--secondary">
           Annuler
         </a>
       </div>
@@ -107,32 +113,30 @@
     <table class="factors-table">
       <thead>
         <tr>
-          <th>Énergie</th>
+          <th>Type d'énergie</th>
           <th>Facteur</th>
           <th>Unité</th>
         </tr>
       </thead>
       <tbody>
+        {% for factor in emission_factors %}
         <tr>
-          <td>⚡ Électricité</td>
-          <td>0.052</td>
-          <td>kgCO₂e/kWh</td>
+          <td>
+            {% if factor.type_energie == 'ELEC' %}⚡
+            {% elif factor.type_energie == 'GAZ' %}🔥
+            {% elif factor.type_energie == 'HEAT' %}♨️
+            {% elif factor.type_energie == 'COOL' %}❄️
+            {% else %}🔋{% endif %}
+            {{ factor.get_type_energie_display }}
+          </td>
+          <td>{{ factor.facteur }}</td>
+          <td>{{ factor.unit }}</td>
         </tr>
+        {% empty %}
         <tr>
-          <td>🔥 Gaz Naturel</td>
-          <td>0.227</td>
-          <td>kgCO₂e/kWh</td>
+          <td colspan="3" style="text-align: center;">Aucun facteur d'émission défini.</td>
         </tr>
-        <tr>
-          <td>♨️ Réseau Chaleur</td>
-          <td>0.150</td>
-          <td>kgCO₂e/kWh</td>
-        </tr>
-        <tr>
-          <td>❄️ Climatisation</td>
-          <td>0.052</td>
-          <td>kgCO₂e/kWh</td>
-        </tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>

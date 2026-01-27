@@ -83,13 +83,7 @@
                 <dd>{{ vehicle_data.updated_at|date:"d/m/Y à H:i" }}</dd>
 
                 <dt>Par</dt>
-                <dd>
-                    {% if vehicle_data.user %}
-                        {{ vehicle_data.user.get_full_name|default:vehicle_data.user.username }}
-                    {% else %}
-                        Non spécifié
-                    {% endif %}
-                </dd>
+                <dd>{{ vehicle_data.user.get_full_name|default:vehicle_data.user.username }}</dd>
             </dl>
         </div>
 
