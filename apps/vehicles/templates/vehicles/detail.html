@@ -16,7 +16,7 @@
                 <p><strong>Méthode de calcul :</strong>
                     {% if object.calculation_method == 'fuel' %}Par carburant{% else %}Par distance{% endif %}
                 </p>
-                <p><strong>Utilisateur :</strong> {{ object.user.username }}</p>
+
                 <p><strong>Date d'ajout :</strong> {{ object.created_at|date:"d/m/Y H:i" }}</p>
             </div>
 
