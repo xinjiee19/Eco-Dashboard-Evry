@@ -14,7 +14,7 @@
                 <p><strong>Nom :</strong> {{ object.nom }}</p>
                 <p><strong>Année :</strong> {{ object.year }}</p>
                 <p><strong>Type :</strong> {{ object.get_type_equipement_display }}</p>
-                <p><strong>Groupe :</strong> {{ object.group|default:"-" }}</p>
+
                 <p><strong>Date d'ajout :</strong> {{ object.created_at|date:"d/m/Y H:i" }}</p>
                 {% if object.marque_modele %}
                 <p><strong>Marque/Modèle :</strong> {{ object.marque_modele }}</p>

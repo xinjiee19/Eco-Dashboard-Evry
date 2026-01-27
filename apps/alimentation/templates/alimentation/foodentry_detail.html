@@ -51,6 +51,9 @@
 
     <div class="actions"
       style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem; display: flex; gap: 1rem;">
+      <a href="{% url 'food_update' object.pk %}" class="btn btn--secondary"
+        style="color: #2d6a4f; border: 1px solid #2d6a4f; padding: 0.5rem 1rem; border-radius: 4px;">✏️
+        Modifier</a>
       <a href="{% url 'food_delete' object.pk %}" class="btn btn--danger">Supprimer cette donnée</a>
     </div>
   </div>
