@@ -31,8 +31,9 @@
                         <strong>Durée de vie :</strong> {{ object.duree_vie }} ans
                     </li>
                     <li>
-                        <strong>Empreinte Fabrication (Total) :</strong> {{ object.empreinte_fabrication|floatformat:2
-                        }} kg CO₂e
+                        <!-- Simplified label and ensured single line tag -->
+                        <strong>Empreinte Fab. (Total) :</strong> {{ object.empreinte_fabrication|floatformat:2 }} kg
+                        CO₂e
                     </li>
                     <li>
                         <strong>Conso Annuelle (Total) :</strong> {{ object.consommation_annuelle|floatformat:2 }} kWh

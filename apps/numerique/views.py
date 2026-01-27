@@ -141,3 +141,4 @@ def numerique_delete(request, pk):
     return render(request, 'numerique/confirm_delete.html', {
         'object': numerique
     })
+# touch
