@@ -77,10 +77,10 @@
             {% endfor %}
 
             <div class="form-actions">
-                <button type="submit" class="btn btn--primary btn--large">
+                <button type="submit" class="btn btn-primary btn-large">
                     💾 Enregistrer
                 </button>
-                <a href="{% url 'vehicle_list' %}" class="btn btn--secondary">
+                <a href="{% url 'vehicle_list' %}" class="btn btn-secondary">
                     Annuler
                 </a>
             </div>
@@ -102,7 +102,7 @@
             <tbody>
                 {% for factor in emission_factors %}
                 <tr>
-                    <td>{{ factor.name }}</td>
+                    <td>⛽ {{ factor.name }}</td>
                     <td>{{ factor.factor_value }}</td>
                     <td>kg CO₂e/{{ factor.unit }}</td>
                     <td>{{ factor.source }}</td>
@@ -236,11 +236,6 @@
         margin-top: 2rem;
         padding-top: 1.5rem;
         border-top: 1px solid var(--border);
-    }
-
-    .btn--large {
-        padding: 1rem 2rem;
-        font-size: 1.05rem;
     }
 
     .info-box {

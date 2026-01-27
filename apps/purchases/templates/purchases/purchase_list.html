@@ -11,10 +11,10 @@
             <p class="page-subtitle">{{ purchase_count }} donnée(s) enregistrée(s)</p>
         </div>
         <div style="display: flex; gap: 10px;">
-            <a href="{% url 'purchase_form' %}" class="btn btn--primary">
+            <a href="{% url 'purchase_form' %}" class="btn btn-primary">
                 📝 Nouvelle saisie
             </a>
-            <a href="{% url 'dashboard' %}" class="btn btn--secondary">
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
                 🏠 Retourner au dashboard
             </a>
         </div>
@@ -139,16 +139,16 @@
     }
 
     .total-card {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 8px rgba(45, 106, 79, 0.2);
-    }
+    background: linear-gradient(135deg, #2d6a4f 0%, #52796f 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 8px rgba(45, 106, 79, 0.2);
+  }
 
     .total-card__icon {
         font-size: 3rem;

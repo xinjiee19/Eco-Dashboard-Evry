@@ -3,15 +3,36 @@
 {% block title %}Numérique - Bilan Carbone{% endblock %}
 
 {% block content %}
+<style>
+    /* Target the Django-generated inputs specifically */
+    .form-container input, 
+    .form-container select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+        height: 40px; /* Force a consistent height for all fields */
+        box-sizing: border-box;
+    }
+
+    /* Make sure the green button matches the height of the inputs */
+    .form-container button {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
 <div class="container" style="padding: 20px;">
     <div
         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 1rem; border-bottom: 2px solid #dee2e6;">
         <h2 class="dashboard-title" style="color: #2d6a4f; margin: 0;">💻 Volet Numérique</h2>
         <div style="display: flex; gap: 10px;">
-            <a href="{% url 'numerique_list' %}" class="btn btn--secondary">
+            <a href="{% url 'numerique_list' %}" class="btn btn-secondary">
                 👁️ Voir liste des données
             </a>
-            <a href="{% url 'dashboard' %}" class="btn btn--secondary">
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
                 🏠 Retourner au dashboard
             </a>
         </div>

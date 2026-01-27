@@ -10,9 +10,14 @@
             <h2 class="page-title">🚗 Mes Données Véhicules</h2>
             <p class="page-subtitle">{{ count }} donnée(s) enregistrée(s)</p>
         </div>
-        <a href="{% url 'vehicle_form' %}" class="btn btn--primary">
-            ➕ Nouvelle saisie
-        </a>
+        <div style="display: flex; gap: 10px;">
+            <a href="{% url 'vehicle_form' %}" class="btn btn-primary">
+                📝 Nouvelle saisie
+            </a>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                🏠 Retourner au dashboard
+            </a>
+        </div>
     </div>
 
     {% if messages %}
@@ -27,13 +32,9 @@
 
     {% if vehicle_data %}
     <!-- Total CO2 card -->
-    <div class="total-card">
-        <div class="total-card__icon">🌍</div>
-        <div class="total-card__content">
-            <h3 class="total-card__label">Impact carbone total</h3>
-            <p class="total-card__value">{{ total_co2|floatformat:2 }} kg CO₂e</p>
-            <p class="total-card__subtext">≈ {% widthratio total_co2 1000 1 %} tonne(s) CO₂e
-        </div>
+    <div class="metric-card">
+        <div class="metric-card__label">Impact Carbone Total (Véhicules)</div>
+        <div class="metric-card__value">{{ total_co2|floatformat:2 }} <span class="metric-card__unit">kg CO₂e</span></div>
     </div>
 
     <!-- Data table -->
@@ -81,6 +82,10 @@
                             <a href="{% url 'vehicle_detail' data.pk %}" class="btn-icon" title="Voir">
                                 👁️
                             </a>
+                            <a href="{% url 'vehicle_update' data.pk %}" class="btn-icon btn-icon--edit"
+                                title="Modifier">
+                                ✏️
+                            </a>
                             <a href="{% url 'vehicle_delete' data.pk %}" class="btn-icon btn-icon--danger"
                                 title="Supprimer">
                                 🗑️
@@ -100,7 +105,7 @@
         <p class="empty-state__description">
             Commencez par saisir vos premières données véhicules
         </p>
-        <a href="{% url 'vehicle_form' %}" class="btn btn--primary btn--large">
+        <a href="{% url 'vehicle_form' %}" class="btn btn-primary btn-large">
             ➕ Créer ma première saisie
         </a>
     </div>
@@ -112,7 +117,6 @@
         <ul>
             <li><strong>Par carburant</strong> : Saisissez vos consommations d'essence et/ou de gazole</li>
             <li><strong>Par distance</strong> : Saisissez la distance totale parcourue</li>
-            <li>Les calculs utilisent les <strong>facteurs ADEME officiels</strong> vérifiés en janvier 2026</li>
         </ul>
     </div>
 </div>
@@ -133,39 +137,6 @@
         color: var(--text-light);
         font-size: 0.9rem;
         margin-top: 0.25rem;
-    }
-
-    .total-card {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 8px rgba(45, 106, 79, 0.2);
-    }
-
-    .total-card__icon {
-        font-size: 3rem;
-    }
-
-    .total-card__label {
-        font-size: 0.9rem;
-        font-weight: 500;
-        opacity: 0.9;
-    }
-
-    .total-card__value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin: 0.5rem 0;
-    }
-
-    .total-card__subtext {
-        font-size: 0.9rem;
-        opacity: 0.8;
     }
 
     .data-table-container {

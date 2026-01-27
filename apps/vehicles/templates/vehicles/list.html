@@ -32,9 +32,14 @@
 
     {% if vehicle_data %}
     <!-- Total CO2 card -->
-    <div class="metric-card">
-        <div class="metric-card__label">Impact Carbone Total (Véhicules)</div>
-        <div class="metric-card__value">{{ total_co2|floatformat:2 }} <span class="metric-card__unit">kg CO₂e</span></div>
+    <div class="total-card">
+        <div class="total-card__icon">🌍</div>
+        <div class="total-card__content">
+            <h3 class="total-card__label">Impact carbone total</h3>
+            <p class="total-card__value">{{ total_co2|floatformat:2 }} kg CO₂e</p>
+            <p class="total-card__subtext">≈ {% widthratio total_co2 1000 1 %} tonne(s) CO₂e | Montant total:
+                {{ total_amount|floatformat:2 }} €</p>
+        </div>
     </div>
 
     <!-- Data table -->
@@ -226,7 +231,38 @@
     .btn-icon--danger:hover {
         background: #dc3545;
     }
+    .total-card {
+        background: linear-gradient(135deg, #2d6a4f 0%, #52796f 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 8px rgba(45, 106, 79, 0.2);
+    }
 
+    .total-card__icon {
+        font-size: 3rem;
+    }
+
+    .total-card__label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        opacity: 0.9;
+    }
+
+    .total-card__value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+
+    .total-card__subtext {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
     .empty-state {
         text-align: center;
         padding: 4rem 2rem;

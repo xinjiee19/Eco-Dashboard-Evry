@@ -7,7 +7,7 @@
 <div class="container">
     <div class="page-header">
         <h1 class="page-title">🛒 Détail de l'achat</h1>
-        <a href="{% url 'purchase_list' %}" class="btn btn--secondary">← Retour à la liste</a>
+        <a href="{% url 'purchase_list' %}" class="btn btn-secondary">← Retour à la liste</a>
     </div>
 
     <div class="detail-card">
@@ -55,8 +55,69 @@
         {% endif %}
 
         <div class="detail-actions">
-            <a href="{% url 'purchase_delete' purchase.pk %}" class="btn btn--danger">🗑️ Supprimer</a>
+            <a href="{% url 'purchase_delete' purchase.pk %}" class="btn btn-danger">🗑️ Supprimer</a>
         </div>
     </div>
 </div>
+<style>
+    /* 1. The Container/Card */
+    .detail-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        padding: 30px;
+        margin-top: 20px;
+        border: 1px solid #eef0f2;
+    }
+
+    /* 2. The Sections */
+    .detail-section {
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px dashed #eee;
+    }
+    .detail-section:last-child { border-bottom: none; }
+
+    /* 3. The Definition List (Label vs Data) */
+    dt {
+        font-weight: bold;
+        color: #666;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        margin-top: 10px;
+    }
+    dd {
+        font-size: 1.1rem;
+        margin-left: 0;
+        margin-bottom: 15px;
+        color: #2c3e50;
+    }
+
+    /* 4. The "Carbon" Highlight Zone */
+    .highlight {
+        background: #f0fff4;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #c6f6d5;
+    }
+    .co2-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #2d6a4f;
+    }
+    .co2-tons {
+        color: #40916c;
+        font-style: italic;
+    }
+
+    /* 5. The Buttons */
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 6px;
+        display: inline-block;
+    }
+</style>
 {% endblock %}

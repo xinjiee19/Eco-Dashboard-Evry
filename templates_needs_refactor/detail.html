@@ -6,8 +6,8 @@
 {% block content %}
 <div class="container">
     <div class="page-header">
-        <h2 class="page-title">🚗 Détail de la donnée</h2>
-        <a href="{% url 'vehicle_list' %}" class="btn btn--secondary">
+        <h2 class="page-title">🚗 Détail de la donnée ({{ vehicle_data.pk }})</h2>
+        <a href="{% url 'vehicle_list' %}" class="btn btn-secondary">
             ← Retour à la liste
         </a>
     </div>
@@ -61,10 +61,11 @@
             {% endif %}
         </div>
 
-        <div class="detail-section detail-section--highlight">
-            <h3 class="detail-section__title">🌍 Impact carbone total</h3>
-            <p class="impact-value">{{ vehicle_data.total_co2_kg|floatformat:2 }} kg CO₂e</p>
-            <p class="impact-subtext">≈ {{ vehicle_data.total_co2_tonnes|floatformat:3 }} tonne(s) CO₂e</p>
+        <div class="metric-card">
+            <div class="metric-card__label">Impact Carbone Total</div>
+            <div class="metric-card__value">
+                {{ vehicle_data.total_co2_kg|floatformat:2 }} <span class="metric-card__unit">kg CO₂e</span>
+            </div>
         </div>
 
         {% if vehicle_data.notes %}
@@ -88,7 +89,7 @@
         </div>
 
         <div class="detail-actions">
-            <a href="{% url 'vehicle_delete' vehicle_data.pk %}" class="btn btn--secondary">
+            <a href="{% url 'vehicle_delete' vehicle_data.pk %}" class="btn btn-danger">
                 🗑️ Supprimer
             </a>
         </div>
@@ -114,12 +115,6 @@
         border-bottom: none;
     }
 
-    .detail-section--highlight {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-        color: white;
-        text-align: center;
-    }
-
     .detail-section--meta {
         background: var(--bg-main);
     }
@@ -128,10 +123,6 @@
         color: var(--primary);
         margin-bottom: 1.5rem;
         font-size: 1.125rem;
-    }
-
-    .detail-section--highlight .detail-section__title {
-        color: white;
     }
 
     .detail-list {
@@ -158,17 +149,6 @@
         color: var(--primary);
         font-weight: 700;
         font-size: 1.1rem;
-    }
-
-    .impact-value {
-        font-size: 3rem;
-        font-weight: 700;
-        margin: 1rem 0;
-    }
-
-    .impact-subtext {
-        font-size: 1rem;
-        opacity: 0.9;
     }
 
     .notes-content {
