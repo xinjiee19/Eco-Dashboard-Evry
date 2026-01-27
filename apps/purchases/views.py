@@ -70,7 +70,7 @@ def purchase_detail(request, pk):
         purchase = get_object_or_404(PurchaseData, pk=pk, group__in=request.user.groups.all())
     
     return render(request, 'purchases/purchase_detail.html', {
-        'purchase': purchase
+        'object': purchase
     })
 
 

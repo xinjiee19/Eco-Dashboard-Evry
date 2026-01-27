@@ -1,62 +1,99 @@
-{% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Détail achat - Bilan Carbone{% endblock %}
-
+{% extends "base.html" %}
 {% block content %}
 <div class="container">
-    <div class="page-header">
-        <h1 class="page-title">🛒 Détail de l'achat</h1>
+    <div style="margin-bottom: 2rem;">
         <a href="{% url 'purchase_list' %}" class="btn btn--secondary">← Retour à la liste</a>
     </div>
 
-    <div class="detail-card">
-        <div class="detail-section">
-            <h3>📋 Informations générales</h3>
-            <dl>
-                <dt>Année</dt>
-                <dd>{{ purchase.year }}</dd>
-                
-                <dt>Service/Direction</dt>
-                <dd>{{ purchase.service|default:"Non renseigné" }}</dd>
-            </dl>
-        </div>
+    <div class="card">
+        <h2>Détail Achat : {{ object.description|truncatechars:30 }} ({{ object.year }})</h2>
 
-        <div class="detail-section">
-            <h3>💰 Détails de l'achat</h3>
-            <dl>
-                <dt>Catégorie</dt>
-                <dd><span class="badge">{{ purchase.get_category_display }}</span></dd>
-                
-                <dt>Description</dt>
-                <dd>{{ purchase.description }}</dd>
-                
-                <dt>Montant</dt>
-                <dd><strong>{{ purchase.amount_euros|floatformat:2 }} €</strong></dd>
-                
-                <dt>Facteur d'émission</dt>
-                <dd>{{ purchase.emission_factor }} kgCO₂e/k€</dd>
-            </dl>
-        </div>
+        <div class="grid-details">
+            <div class="detail-group">
+                <h3>Info Générale</h3>
+                <p><strong>Service :</strong> {{ object.service }}</p>
+                <p><strong>Année :</strong> {{ object.year }}</p>
+                <p><strong>Catégorie :</strong> {{ object.get_category_display }}</p>
+                <p><strong>Description :</strong> {{ object.description }}</p>
+                <p><strong>Date d'ajout :</strong> {{ object.created_at|date:"d/m/Y H:i" }}</p>
+            </div>
 
-        <div class="detail-section highlight">
-            <h3>🌍 Impact Carbone</h3>
-            <div class="co2-result">
-                <div class="co2-value">{{ purchase.total_co2_kg|floatformat:2 }} kg CO₂e</div>
-                <div class="co2-tons">≈ {{ purchase.total_co2_tons|floatformat:3 }} tonne(s) CO₂e</div>
+            <div class="detail-group">
+                <h3>Montants & Facteurs</h3>
+                <ul>
+                    <li>
+                        <strong>Montant HT :</strong> {{ object.amount_euros }} €
+                    </li>
+                    <li>
+                        <strong>Facteur d'émission :</strong> {{ object.emission_factor }} <small>kgCO2e/k€</small>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="detail-group result-group">
+                <h3>Impact Carbone Total</h3>
+                <p class="total-co2">{{ object.total_co2_kg|floatformat:2 }} <small>kg CO₂e</small></p>
             </div>
         </div>
 
-        {% if purchase.notes %}
-        <div class="detail-section">
-            <h3>📝 Notes</h3>
-            <p>{{ purchase.notes }}</p>
+        {% if object.notes %}
+        <div class="notes-section" style="margin-top: 2rem;">
+            <h3>Notes</h3>
+            <p>{{ object.notes|linebreaks }}</p>
         </div>
         {% endif %}
 
-        <div class="detail-actions">
-            <a href="{% url 'purchase_delete' purchase.pk %}" class="btn btn--danger">🗑️ Supprimer</a>
+        <div class="actions"
+            style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem; display: flex; gap: 1rem;">
+            <a href="{% url 'purchase_update' object.pk %}" class="btn btn--secondary"
+                style="color: #2d6a4f; border: 1px solid #2d6a4f; padding: 0.5rem 1rem; border-radius: 4px;">✏️
+                Modifier</a>
+            <a href="{% url 'purchase_delete' object.pk %}" class="btn btn--danger">Supprimer cette donnée</a>
         </div>
     </div>
 </div>
+
+<style>
+    .card {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .grid-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 1.5rem;
+    }
+
+    .detail-group h3 {
+        color: #2d6a4f;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .total-co2 {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #2d6a4f;
+    }
+
+    .text-muted {
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+
+    .btn--secondary {
+        text-decoration: none;
+        color: #6c757d;
+    }
+
+    .btn--danger {
+        color: #dc3545;
+        text-decoration: none;
+    }
+</style>
 {% endblock %}

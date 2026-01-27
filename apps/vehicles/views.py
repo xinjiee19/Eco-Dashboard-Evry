@@ -117,10 +117,7 @@ def vehicle_detail_view(request, pk):
     else:
         vehicle_data = get_object_or_404(VehicleData, pk=pk, group__in=request.user.groups.all())
     
-    context = {
-        'vehicle_data': vehicle_data,
-    }
-    return render(request, 'vehicles/detail.html', context)
+    return render(request, 'vehicles/detail.html', {'object': vehicle_data})
 
 
 @login_required

@@ -1,96 +1,103 @@
 {% extends "base.html" %}
-
-{% block title %}Détail Alimentation - {{ entry.year }}{% endblock %}
-
 {% block content %}
 <div class="container">
-  <div class="page-header">
-    <h2 class="page-title">🍽️ Détail de la saisie</h2>
-    <a href="{% url 'food_list' %}" class="btn btn--secondary">
-      ← Retour à la liste
-    </a>
+  <div style="margin-bottom: 2rem;">
+    <a href="{% url 'food_list' %}" class="btn btn--secondary">← Retour à la liste</a>
   </div>
 
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-primary text-white">
-          <h5 class="mb-0">Données {{ entry.year }} - {{ entry.service }}</h5>
-        </div>
-        <div class="card-body">
-          <div class="row mb-4 border-bottom pb-3">
-            <div class="col-6">
-              <strong>Service / Direction :</strong>
-              <p class="text-muted">{{ entry.service }}</p>
-            </div>
-            <div class="col-6 text-end">
-              <strong>Année :</strong>
-              <p class="fs-4 text-primary">{{ entry.year }}</p>
-            </div>
-          </div>
+  <div class="card">
+    <h2>Détail alimentation : {{ object.service }} ({{ object.year }})</h2>
 
-          <h6 class="text-primary mb-3">📊 Détail des repas servis</h6>
-          <ul class="list-group list-group-flush mb-4">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              🥩 Bœuf / Veau
-              <span class="badge bg-danger rounded-pill">{{ entry.beef_meals }}</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              🐷 Porc
-              <span class="badge bg-warning text-dark rounded-pill">{{ entry.pork_meals }}</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              🐔 Volaille / Poisson
-              <span class="badge bg-info text-dark rounded-pill">{{ entry.poultry_fish_meals }}</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              🥗 Végétarien
-              <span class="badge bg-success rounded-pill">{{ entry.vegetarian_meals }}</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              🥪 Pique-niques (Sans viande)
-              <span class="badge bg-success rounded-pill">{{ entry.picnic_no_meat_meals }}</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              🥪 Pique-niques (Avec viande)
-              <span class="badge bg-warning text-dark rounded-pill">{{ entry.picnic_meat_meals }}</span>
-            </li>
-          </ul>
-
-          <div class="alert alert-success d-flex align-items-center" role="alert">
-            <span class="fs-2 me-3">🌍</span>
-            <div>
-              <strong>Impact Carbone Total :</strong>
-              <h3 class="mb-0">{{ entry.total_co2_kg|floatformat:2 }} kg CO₂e</h3>
-            </div>
-          </div>
-        </div>
-        <div class="card-footer bg-light d-flex justify-content-end gap-2">
-          <a href="{% url 'food_update' entry.pk %}" class="btn btn-warning">
-            ✏️ Modifier
-          </a>
-          <a href="{% url 'food_delete' entry.pk %}" class="btn btn-danger">
-            🗑️ Supprimer
-          </a>
-        </div>
+    <div class="grid-details">
+      <div class="detail-group">
+        <h3>Info Générale</h3>
+        <p><strong>Service :</strong> {{ object.service }}</p>
+        <p><strong>Année :</strong> {{ object.year }}</p>
+        <p><strong>Date d'ajout :</strong> {{ object.created_at|date:"d/m/Y H:i" }}</p>
+        <p><strong>Groupe :</strong> {{ object.group|default:"-" }}</p>
       </div>
+
+      <div class="detail-group">
+        <h3>Détail des repas servis</h3>
+        <ul>
+          <li>
+            <strong>Bœuf / Veau :</strong> {{ object.beef_meals }} repas
+          </li>
+          <li>
+            <strong>Porc :</strong> {{ object.pork_meals }} repas
+          </li>
+          <li>
+            <strong>Volaille / Poisson :</strong> {{ object.poultry_fish_meals }} repas
+          </li>
+          <li>
+            <strong>Végétarien :</strong> {{ object.vegetarian_meals }} repas
+          </li>
+          <li>
+            <strong>Pique-niques (sans viande) :</strong> {{ object.picnic_no_meat_meals }} repas
+          </li>
+          <li>
+            <strong>Pique-niques (avec viande) :</strong> {{ object.picnic_meat_meals }} repas
+          </li>
+          <li style="margin-top: 1rem; border-top: 1px solid #eee; padding-top: 0.5rem;">
+            <strong>Total Repas :</strong> {{ object.total_meals }}
+          </li>
+        </ul>
+      </div>
+
+      <div class="detail-group result-group">
+        <h3>Impact Carbone Total</h3>
+        <p class="total-co2">{{ object.total_co2_kg|floatformat:2 }} <small>kg CO₂e</small></p>
+      </div>
+    </div>
+
+    <div class="actions"
+      style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem; display: flex; gap: 1rem;">
+      <a href="{% url 'food_delete' object.pk %}" class="btn btn--danger">Supprimer cette donnée</a>
     </div>
   </div>
 </div>
 
 <style>
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid #dee2e6;
+  .card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
-  .page-title {
+  .grid-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 1.5rem;
+  }
+
+  .detail-group h3 {
     color: #2d6a4f;
-    margin: 0;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .total-co2 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2d6a4f;
+  }
+
+  .text-muted {
+    color: #6c757d;
+    font-size: 0.85rem;
+  }
+
+  .btn--secondary {
+    text-decoration: none;
+    color: #6c757d;
+  }
+
+  .btn--danger {
+    color: #dc3545;
+    text-decoration: none;
   }
 </style>
 {% endblock %}

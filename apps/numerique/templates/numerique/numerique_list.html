@@ -77,8 +77,12 @@
                     </td>
                     <td class="data-cell">
                         <div class="action-buttons">
+                            <a href="{% url 'numerique_detail' item.pk %}" class="btn-icon btn-icon--edit"
+                                title="Voir détail">
+                                👁️
+                            </a>
                             <a href="{% url 'numerique_update' item.pk %}" class="btn-icon btn-icon--edit"
-                                title="Modifier">
+                                title="Modifier" style="margin-right: 0.5rem;">
                                 ✏️
                             </a>
                             <a href="{% url 'numerique_delete' item.pk %}" class="btn-icon btn-icon--danger"

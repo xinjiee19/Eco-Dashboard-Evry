@@ -78,7 +78,7 @@ def foodentry_detail(request, pk):
         entry = get_object_or_404(FoodEntry, pk=pk)
     else:
         entry = get_object_or_404(FoodEntry, pk=pk, group__in=request.user.groups.all())
-    return render(request, "alimentation/foodentry_detail.html", {"entry": entry})
+    return render(request, "alimentation/foodentry_detail.html", {"object": entry})
 
 
 @login_required

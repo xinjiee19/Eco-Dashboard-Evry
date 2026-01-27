@@ -114,6 +114,18 @@ def numerique_update(request, pk):
     })
 
 @login_required
+def numerique_detail(request, pk):
+    """Détail d'un équipement"""
+    if request.user.is_staff or request.user.is_superuser:
+        numerique = get_object_or_404(EquipementNumerique, pk=pk)
+    else:
+        numerique = get_object_or_404(EquipementNumerique, pk=pk, group__in=request.user.groups.all())
+    
+    return render(request, 'numerique/detail.html', {
+        'object': numerique
+    })
+
+@login_required
 def numerique_delete(request, pk):
     """Supprimer un équipement"""
     if request.user.is_staff or request.user.is_superuser:

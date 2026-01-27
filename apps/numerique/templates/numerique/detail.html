@@ -2,63 +2,57 @@
 {% block content %}
 <div class="container">
     <div style="margin-bottom: 2rem;">
-        <a href="{% url 'vehicle_list' %}" class="btn btn--secondary">← Retour à la liste</a>
+        <a href="{% url 'numerique_list' %}" class="btn btn--secondary">← Retour à la liste</a>
     </div>
 
     <div class="card">
-        <h2>Détail Véhicule : {{ object.service }} ({{ object.year }})</h2>
+        <h2>Détail Équipement : {{ object.nom }} ({{ object.year }})</h2>
 
         <div class="grid-details">
             <div class="detail-group">
                 <h3>Info Générale</h3>
-                <p><strong>Service / Direction :</strong> {{ object.service }}</p>
+                <p><strong>Nom :</strong> {{ object.nom }}</p>
                 <p><strong>Année :</strong> {{ object.year }}</p>
-                <p><strong>Méthode de calcul :</strong>
-                    {% if object.calculation_method == 'fuel' %}Par carburant{% else %}Par distance{% endif %}
-                </p>
-                <p><strong>Utilisateur :</strong> {{ object.user.username }}</p>
+                <p><strong>Type :</strong> {{ object.get_type_equipement_display }}</p>
+                <p><strong>Groupe :</strong> {{ object.group|default:"-" }}</p>
                 <p><strong>Date d'ajout :</strong> {{ object.created_at|date:"d/m/Y H:i" }}</p>
+                {% if object.marque_modele %}
+                <p><strong>Marque/Modèle :</strong> {{ object.marque_modele }}</p>
+                {% endif %}
             </div>
 
             <div class="detail-group">
-                <h3>Données de consommation</h3>
+                <h3>Consommation & Fabrication</h3>
                 <ul>
-                    {% if object.calculation_method == 'fuel' %}
                     <li>
-                        <strong>Essence :</strong> {{ object.essence_liters|default:"0" }} Litres
-                        <br><small class="text-muted">Impact: {{ object.essence_co2_kg|floatformat:2 }} kg CO₂e</small>
+                        <strong>Quantité :</strong> {{ object.quantite }}
                     </li>
                     <li>
-                        <strong>Gazole :</strong> {{ object.gazole_liters|default:"0" }} Litres
-                        <br><small class="text-muted">Impact: {{ object.gazole_co2_kg|floatformat:2 }} kg CO₂e</small>
+                        <strong>Durée de vie :</strong> {{ object.duree_vie }} ans
                     </li>
-                    {% else %}
                     <li>
-                        <strong>Distance parcourue :</strong> {{ object.distance_km }} km
+                        <strong>Empreinte Fabrication (Total) :</strong> {{ object.empreinte_fabrication|floatformat:2
+                        }} kg CO₂e
                     </li>
-                    {% endif %}
+                    <li>
+                        <strong>Conso Annuelle (Total) :</strong> {{ object.consommation_annuelle|floatformat:2 }} kWh
+                    </li>
                 </ul>
             </div>
 
             <div class="detail-group result-group">
                 <h3>Impact Carbone Total</h3>
                 <p class="total-co2">{{ object.total_co2_kg|floatformat:2 }} <small>kg CO₂e</small></p>
+                <small class="text-muted">(Amortissement + Usage annuel)</small>
             </div>
         </div>
 
-        {% if object.notes %}
-        <div class="notes-section" style="margin-top: 2rem;">
-            <h3>Notes</h3>
-            <p>{{ object.notes|linebreaks }}</p>
-        </div>
-        {% endif %}
-
         <div class="actions"
             style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem; display: flex; gap: 1rem;">
-            <a href="{% url 'vehicle_update' object.pk %}" class="btn btn--secondary"
+            <a href="{% url 'numerique_update' object.pk %}" class="btn btn--secondary"
                 style="color: #2d6a4f; border: 1px solid #2d6a4f; padding: 0.5rem 1rem; border-radius: 4px;">✏️
                 Modifier</a>
-            <a href="{% url 'vehicle_delete' object.pk %}" class="btn btn--danger">Supprimer cette donnée</a>
+            <a href="{% url 'numerique_delete' object.pk %}" class="btn btn--danger">Supprimer cette donnée</a>
         </div>
     </div>
 </div>
