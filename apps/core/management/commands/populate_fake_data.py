@@ -47,38 +47,73 @@ class Command(BaseCommand):
         UserManual.objects.update_or_create(
             group=None,
             defaults={
-                'title': "Guide de Bienvenue - Eco-Dashboard",
+                'title': "Guide Utilisateur - Eco Dashboard",
                 'content': """
                 <div class="manual-content">
-                    <h3>👋 Bienvenue sur l'Eco-Dashboard de la Mairie</h3>
-                    <p>Cet outil a pour objectif de centraliser et suivre les émissions de gaz à effet de serre de nos services. Voici comment l'utiliser au quotidien :</p>
+                    <h3 class="mb-4">🚀 Introduction</h3>
+                    <p>Bienvenue sur l'outil de collecte de données carbone de la Mairie d'Evry-Courcouronnes. Cet outil permet à chaque service de renseigner ses activités afin de calculer automatiquement l'empreinte carbone de la collectivité.</p>
                     
-                    <hr>
+                    <hr class="my-5">
 
-                    <h4>1. 🏠 Tableau de Bord (Dashboard)</h4>
-                    <p>C'est votre page d'accueil. Vous y trouverez une vue d'ensemble des émissions de l'année en cours.</p>
-                    <ul>
-                        <li><strong>Graphique global :</strong> Répartition des émissions par secteur (Véhicules, Bâtiments, Achats...).</li>
-                        <li><strong>Statistiques clés :</strong> Totaux en kgCO₂e pour vos périmètres.</li>
-                    </ul>
+                    <h3 class="mb-4">📂 Les Modules de Saisie</h3>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <h4 class="text-secondary">🏢 Bâtiments</h4>
+                            <p class="small text-muted">Saisissez ici les consommations énergétiques de vos locaux.</p>
+                            <ul class="small">
+                                <li><strong>Électricité (kWh) :</strong> Relevez vos factures annuelles.</li>
+                                <li><strong>Gaz & Chaleur :</strong> Indiquez les kWh consommés.</li>
+                                <li><strong>Info requise :</strong> Nom du site, surface, année construction.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="col-md-4 mb-4">
+                            <h4 class="text-primary">🚗 Véhicules</h4>
+                            <p class="small text-muted">Pour la flotte de véhicules de service.</p>
+                            <ul class="small">
+                                <li><strong>Par Carburant (Recommandé) :</strong> Litres d'essence/gazole (plus précis).</li>
+                                <li><strong>Par Distance :</strong> Kilomètres parcourus si vous n'avez pas les litres.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="col-md-4 mb-4">
+                            <h4 class="text-success">🍽️ Alimentation</h4>
+                            <p class="small text-muted">Pour les services de restauration (Cantines, Crèches...).</p>
+                            <ul class="small">
+                                <li>Indiquez le <strong>nombre de repas</strong> par an pour chaque type.</li>
+                                <li>Distinguez bien les repas végétariens des repas carnés (impact très différent).</li>
+                            </ul>
+                        </div>
 
-                    <h4>2. 📝 Saisie des Données</h4>
-                    <p>Dans le menu de gauche, sous <strong>"Modules de Saisie"</strong>, sélectionnez votre domaine d'activité (ex: <em>Véhicules</em>, <em>Achats</em>...).</p>
-                    <ul>
-                        <li>Cliquez sur <strong>"Ajouter une nouvelle entrée"</strong>.</li>
-                        <li>Remplissez le formulaire (Année, Service, Quantités...).</li>
-                        <li>Les calculs d'impact carbone se font automatiquement selon les facteurs officiels (ADEME).</li>
-                    </ul>
+                        <div class="col-md-6 mb-4">
+                            <h4 class="text-secondary" style="color: #9B59B6 !important;">🛍️ Achats</h4>
+                            <p class="small text-muted">Pour les prestations de services et achats divers.</p>
+                            <ul class="small">
+                                <li>Saisissez le <strong>Montant HT</strong> engagé sur l'année.</li>
+                                <li><strong>Attention :</strong> Ne saisissez PAS le matériel informatique ici (utilisez le module Numérique).</li>
+                            </ul>
+                        </div>
 
-                    <h4>3. 📢 Sensibilisation</h4>
-                    <p>Cette page transforme vos chiffres abstraits en <strong>exemples concrets</strong>.</p>
-                    <ul>
-                        <li>Voyez ce que représentent vos émissions en <em>nombre d'arbres</em>, <em>tours du monde en voiture</em>, etc.</li>
-                        <li>Consultez des conseils personnalisés pour réduire votre empreinte.</li>
-                    </ul>
+                        <div class="col-md-6 mb-4">
+                            <h4 class="text-dark">💻 Numérique</h4>
+                            <p class="small text-muted">Inventaire du matériel informatique physique.</p>
+                            <ul class="small">
+                                <li>Saisissez le <strong>nombre d'équipements</strong> (PC, Écrans, Smartphones...).</li>
+                                <li>Précisez la durée de vie estimée (amortissement carbone).</li>
+                            </ul>
+                        </div>
+                    </div>
 
-                    <hr>
-                    <p><em>💡 Astuce : Si vous constatez une erreur dans les facteurs d'émission ou si vous avez besoin d'accès supplémentaires, contactez l'administrateur durable de la mairie.</em></p>
+                    <hr class="my-5">
+
+                    <h3 class="mb-4">📊 Visualisation & Export</h3>
+                    <p>Une fois vos données saisies, rendez-vous dans l'onglet <strong>"Statistiques"</strong> pour visualiser l'impact global.<br>
+                    Vous pouvez télécharger un rapport complet au format <strong>Excel</strong> via le bouton "Exporter".</p>
+
+                    <div class="text-center mt-5">
+                        <a href="/" class="btn btn-success btn-lg px-5">J'ai compris, commencer la saisie !</a>
+                    </div>
                 </div>
                 """
             }
