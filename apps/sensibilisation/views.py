@@ -15,13 +15,23 @@ from .services import SensibilisationService
 from .forms import MessageSensibilisationForm
 
 
-def get_module_totals(year):
-    """Calcule les totaux CO2 par module pour une année donnée"""
-    vehicles = float(VehicleData.objects.filter(year=year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
-    purchases = float(PurchaseData.objects.filter(year=year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
-    alimentation = float(FoodEntry.objects.filter(year=year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
-    batiment = float(BuildingEnergyData.objects.filter(year=year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
-    numerique = float(EquipementNumerique.objects.filter(year=year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
+def get_module_totals(year, user=None):
+    """Calcule les totaux CO2 par module pour une année donnée, filtré par utilisateur si spécifié"""
+    
+    # Helper pour filtrer
+    def get_qs(model):
+        qs = model.objects.filter(year=year)
+        if user and not user.is_staff:
+            # Si l'utilisateur appartient à un groupe, on peut aussi filtrer par groupe si le modèle le supporte
+            # Pour l'instant on filtre par user (créateur)
+             qs = qs.filter(user=user)
+        return qs
+
+    vehicles = float(get_qs(VehicleData).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
+    purchases = float(get_qs(PurchaseData).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
+    alimentation = float(get_qs(FoodEntry).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
+    batiment = float(get_qs(BuildingEnergyData).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
+    numerique = float(get_qs(EquipementNumerique).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
     
     return {
         'vehicles': vehicles,
@@ -40,26 +50,29 @@ def calculate_variation(current, previous):
     return round(((current - previous) / previous) * 100, 1)
 
 
-@user_passes_test(lambda u: u.is_staff)
+@login_required
 def sensibilisation_page(request):
     """Page dédiée Sensibilisation avec équivalences, conseils et comparatif"""
     current_year = datetime.now().year
     previous_year = current_year - 1
+    
+    form = None
+    
+    # Gestion du formulaire (Admin seulement)
+    if request.user.is_staff:
+        if request.method == 'POST':
+            form = MessageSensibilisationForm(request.POST)
+            if form.is_valid():
+                form.save()
+                messages.success(request, '✅ Message créé avec succès !')
+                return redirect('sensibilisation_page')
+        else:
+            form = MessageSensibilisationForm()
 
-    # Handle form submission (admin only)
-    if request.method == 'POST':
-        form = MessageSensibilisationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, '✅ Message créé avec succès !')
-            return redirect('sensibilisation_page')
-    else:
-        form = MessageSensibilisationForm()
-
-    # Totaux année en cours
-    stats_current = get_module_totals(current_year)
+    # Totaux année en cours (filtrés par user sauf si admin)
+    stats_current = get_module_totals(current_year, request.user)
     # Totaux année précédente
-    stats_previous = get_module_totals(previous_year)
+    stats_previous = get_module_totals(previous_year, request.user)
 
     # Calculer les variations
     comparaison = []
@@ -85,6 +98,7 @@ def sensibilisation_page(request):
         })
 
     # Messages et Zoom Actions (séparés)
+    # Tout le monde voit les messages, mais seul l'admin peut les créer
     messages_admin = MessageSensibilisation.objects.filter(actif=True, type_contenu='message')
     zoom_actions = MessageSensibilisation.objects.filter(actif=True, type_contenu='zoom')
 
@@ -103,6 +117,6 @@ def sensibilisation_page(request):
         'zoom_actions': zoom_actions,
         'equivalences': equivalences,
         'conseils': conseils,
-        'form': form,
+        'form': form, # Sera None pour les non-admins
     }
     return render(request, 'sensibilisation/sensibilisation_page.html', context)
