@@ -663,7 +663,7 @@ def export_statistics_view(request):
         # Achats
         for p in PurchaseData.objects.filter(year=year):
             ws_pur.append([
-                year, p.get_category_display(), p.amount_eur,
+                year, p.get_category_display(), p.amount_euros,
                 round(float(p.total_co2_kg or 0), 2)
             ])
             
