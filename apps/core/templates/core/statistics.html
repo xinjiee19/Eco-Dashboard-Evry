@@ -9,7 +9,13 @@
 
     <div class="page-header">
         <h2 class="page-title">📊 Évolution & Statistiques Comparatives</h2>
-        <a href="{% url 'dashboard' %}" class="btn btn-secondary">← Retour au Tableau de bord</a>
+        <div style="display: flex; gap: 1rem;">
+            <a href="{% url 'export_statistics' %}" class="btn btn-secondary"
+                style="background-color: #f8f9fa; color: #2d6a4f; border: 1px solid #2d6a4f;">
+                📥 Exporter Excel
+            </a>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">← Retour au Tableau de bord</a>
+        </div>
     </div>
 
     <!-- Global Evolution Chart -->
@@ -396,6 +402,5 @@
         height: 400px;
         width: 100%;
     }
-
 </style>
 {% endblock %}

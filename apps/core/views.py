@@ -501,8 +501,144 @@ def statistics_api(request):
         details_data[year]['numerique'] = n_breakdown
         stacked_data['numerique'].append(total_n)
 
-    return JsonResponse({
-        'years': sorted_years,
-        'stacked_data': stacked_data,
-        'details_data': details_data
-    })
+@login_required
+def export_statistics_view(request):
+    """
+    Export statistics to Excel with Native Charts.
+    """
+    import datetime
+    from django.http import HttpResponse
+    from django.db.models import Sum
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    from openpyxl.chart import BarChart, Reference, Series
+    
+    from apps.vehicles.models import VehicleData
+    from apps.purchases.models import PurchaseData
+    from apps.alimentation.models import FoodEntry
+    from apps.batiment.models import BuildingEnergyData
+    from apps.numerique.models import EquipementNumerique
+    
+    # 1. Fetch Years
+    years = set()
+    years.update(VehicleData.objects.values_list('year', flat=True))
+    years.update(BuildingEnergyData.objects.values_list('year', flat=True))
+    years.update(FoodEntry.objects.values_list('year', flat=True))
+    years.update(PurchaseData.objects.values_list('year', flat=True))
+    years.update(EquipementNumerique.objects.values_list('year', flat=True))
+    
+    sorted_years = sorted(list(years))
+    if not sorted_years:
+        sorted_years = [datetime.datetime.now().year]
+
+    # 2. Setup Workbook
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="statistiques_evry.xlsx"'
+    
+    wb = Workbook()
+    
+    # --- SHEET 1: SYNTHÈSE (Graphique) ---
+    ws = wb.active
+    ws.title = "Évolution Annuelle"
+    
+    # Headers
+    headers = ["Année", "Bâtiments", "Véhicules", "Alimentation", "Achats", "Numérique", "Total (kgCO2e)"]
+    ws.append(headers)
+    
+    # Style Headers
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="2d6a4f", end_color="2d6a4f", fill_type="solid")
+    
+    for cell in ws[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center")
+        
+    # Data Rows
+    for year in sorted_years:
+        b_total = BuildingEnergyData.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0
+        v_total = VehicleData.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0
+        f_total = FoodEntry.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0
+        p_total = PurchaseData.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0
+        n_total = EquipementNumerique.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0
+        
+        g_total = b_total + v_total + f_total + p_total + n_total
+        
+        ws.append([
+            year,
+            round(float(b_total), 2),
+            round(float(v_total), 2),
+            round(float(f_total), 2),
+            round(float(p_total), 2),
+            round(float(n_total), 2),
+            round(float(g_total), 2)
+        ])
+
+    # Chart: Stacked Bar
+    chart = BarChart()
+    chart.type = "col"
+    chart.style = 10
+    chart.title = "Évolution des Émissions par Secteur"
+    chart.y_axis.title = "kg CO₂e"
+    chart.x_axis.title = "Année"
+    chart.grouping = "stacked"
+    chart.overlap = 100
+    
+    # Data References
+    # Data: Columns B to F (2 to 6)
+    # Categories: Column A (Year)
+    data = Reference(ws, min_col=2, min_row=1, max_row=len(sorted_years)+1, max_col=6)
+    cats = Reference(ws, min_col=1, min_row=2, max_row=len(sorted_years)+1)
+    
+    chart.add_data(data, titles_from_data=True)
+    chart.set_categories(cats)
+    
+    ws.add_chart(chart, "H2")
+    
+    # --- SHEET 2: DÉTAILS COMPLETS ---
+    ws_d = wb.create_sheet(title="Détails Complets")
+    ws_d.append(["Année", "Secteur", "Détail/Catégorie", "Impact (kgCO2e)"])
+    
+    # Style Header Sheet 2
+    for cell in ws_d[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+    
+    # Fill Data
+    for year in sorted_years:
+        # Bâtiments
+        for b in BuildingEnergyData.objects.filter(year=year):
+            ws_d.append([year, "Bâtiment", b.site_name, round(float(b.total_co2_kg or 0), 2)])
+        
+        # Véhicules
+        for v in VehicleData.objects.filter(year=year):
+            ws_d.append([year, "Véhicule", v.service, round(float(v.total_co2_kg or 0), 2)])
+            
+        # Alimentation
+        for f in FoodEntry.objects.filter(year=year):
+            ws_d.append([year, "Alimentation", f.service, round(float(f.total_co2_kg or 0), 2)])
+            
+        # Achats
+        for p in PurchaseData.objects.filter(year=year):
+            ws_d.append([year, "Achat", p.get_category_display(), round(float(p.total_co2_kg or 0), 2)])
+            
+        # Numérique
+        for n in EquipementNumerique.objects.filter(year=year):
+            ws_d.append([year, "Numérique", n.nom, round(float(n.total_co2_kg or 0), 2)])
+
+    # Adjust Column Widths
+    for sheet in [ws, ws_d]:
+        for col in sheet.columns:
+            max_length = 0
+            column = col[0].column_letter # Get the column name
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            sheet.column_dimensions[column].width = adjusted_width
+
+    wb.save(response)
+    return response
