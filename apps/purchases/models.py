@@ -48,7 +48,6 @@ class PurchaseData(models.Model):
     CATEGORY_CHOICES = [
         ('food_service', 'Restauration & Services légers'),
         ('insurance', 'Assurances & Cotisations'),
-        ('it_telecom', 'IT & Téléphonie'),
         ('cleaning_maintenance', 'Nettoyage & Entretien & Espaces verts'),
         ('activities', 'Séjours & Activités'),
         ('laundry', 'Blanchisserie'),
