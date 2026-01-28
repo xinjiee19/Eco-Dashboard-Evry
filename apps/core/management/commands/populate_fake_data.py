@@ -46,16 +46,39 @@ class Command(BaseCommand):
 
         if not UserManual.objects.exists():
             UserManual.objects.create(
-                title="Guide de Bienvenue",
+                title="Guide de Bienvenue - Eco-Dashboard",
                 content="""
-                <h3>👋 Bienvenue sur l'Eco-Dashboard</h3>
-                <p>Cet outil permet de collecter et visualiser l'empreinte carbone de la mairie.</p>
-                <ul>
-                    <li><strong>Tableau de Bord :</strong> Vue d'ensemble des émissions.</li>
-                    <li><strong>Modules de Saisie :</strong> Cliquez sur votre service dans le menu pour entrer vos données (Véhicules, Bâtiments, etc.).</li>
-                    <li><strong>Sensibilisation :</strong> Découvrez vos équivalences carbone et des conseils pour réduire l'impact.</li>
-                </ul>
-                <p><em>Pour toute question, contactez l'administrateur.</em></p>
+                <div class="manual-content">
+                    <h3>👋 Bienvenue sur l'Eco-Dashboard de la Mairie</h3>
+                    <p>Cet outil a pour objectif de centraliser et suivre les émissions de gaz à effet de serre de nos services. Voici comment l'utiliser au quotidien :</p>
+                    
+                    <hr>
+
+                    <h4>1. 🏠 Tableau de Bord (Dashboard)</h4>
+                    <p>C'est votre page d'accueil. Vous y trouverez une vue d'ensemble des émissions de l'année en cours.</p>
+                    <ul>
+                        <li><strong>Graphique global :</strong> Répartition des émissions par secteur (Véhicules, Bâtiments, Achats...).</li>
+                        <li><strong>Statistiques clés :</strong> Totaux en kgCO₂e pour vos périmètres.</li>
+                    </ul>
+
+                    <h4>2. 📝 Saisie des Données</h4>
+                    <p>Dans le menu de gauche, sous <strong>"Modules de Saisie"</strong>, sélectionnez votre domaine d'activité (ex: <em>Véhicules</em>, <em>Achats</em>...).</p>
+                    <ul>
+                        <li>Cliquez sur <strong>"Ajouter une nouvelle entrée"</strong>.</li>
+                        <li>Remplissez le formulaire (Année, Service, Quantités...).</li>
+                        <li>Les calculs d'impact carbone se font automatiquement selon les facteurs officiels (ADEME).</li>
+                    </ul>
+
+                    <h4>3. 📢 Sensibilisation</h4>
+                    <p>Cette page transforme vos chiffres abstraits en <strong>exemples concrets</strong>.</p>
+                    <ul>
+                        <li>Voyez ce que représentent vos émissions en <em>nombre d'arbres</em>, <em>tours du monde en voiture</em>, etc.</li>
+                        <li>Consultez des conseils personnalisés pour réduire votre empreinte.</li>
+                    </ul>
+
+                    <hr>
+                    <p><em>💡 Astuce : Si vous constatez une erreur dans les facteurs d'émission ou si vous avez besoin d'accès supplémentaires, contactez l'administrateur durable de la mairie.</em></p>
+                </div>
                 """
             )
             self.stdout.write(self.style.SUCCESS("Default User Manual initialized."))
