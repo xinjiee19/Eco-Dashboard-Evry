@@ -602,39 +602,81 @@ def export_statistics_view(request):
     
     ws.add_chart(chart, "H2")
     
-    # --- SHEET 2: DÉTAILS COMPLETS ---
-    ws_d = wb.create_sheet(title="Détails Complets")
-    ws_d.append(["Année", "Secteur", "Détail/Catégorie", "Impact (kgCO2e)"])
+    # --- SHEET: Détails Bâtiments ---
+    ws_bat = wb.create_sheet(title="Détails Bâtiments")
+    ws_bat.append(["Année", "Site", "Surface (m²)", "Élec (kWh)", "Gaz (kWh)", "Chaleur (kWh)", "Clim (kWh)", "PV (kWh)", "Impact (kgCO2e)"])
     
-    # Style Header Sheet 2
-    for cell in ws_d[1]:
-        cell.font = header_font
-        cell.fill = header_fill
+    # --- SHEET: Détails Véhicules ---
+    ws_veh = wb.create_sheet(title="Détails Véhicules")
+    ws_veh.append(["Année", "Service", "Type Calcul", "Essence (L)", "Gazole (L)", "Distance (km)", "Impact (kgCO2e)"])
+
+    # --- SHEET: Détails Alimentation ---
+    ws_food = wb.create_sheet(title="Détails Alimentation")
+    ws_food.append(["Année", "Service", "Boeuf", "Porc", "Volaille/Poisson", "Végé", "Pique-Nique", "Total Repas", "Impact (kgCO2e)"])
+
+    # --- SHEET: Détails Achats ---
+    ws_pur = wb.create_sheet(title="Détails Achats")
+    ws_pur.append(["Année", "Catégorie", "Montant (€)", "Impact (kgCO2e)"])
+
+    # --- SHEET: Détails Numérique ---
+    ws_num = wb.create_sheet(title="Détails Numérique")
+    ws_num.append(["Année", "Nom", "Type", "Quantité", "Conso (kWh)", "Fab. (kgCO2e)", "Impact (kgCO2e)"])
+
+    # Global Header Style (Helper)
+    def style_header(ws):
+        for cell in ws[1]:
+            cell.font = header_font
+            cell.fill = header_fill
+
+    for sheet in [ws_bat, ws_veh, ws_food, ws_pur, ws_num]:
+        style_header(sheet)
     
     # Fill Data
     for year in sorted_years:
         # Bâtiments
         for b in BuildingEnergyData.objects.filter(year=year):
-            ws_d.append([year, "Bâtiment", b.site_name, round(float(b.total_co2_kg or 0), 2)])
+            ws_bat.append([
+                year, b.site_name, b.surface_area, 
+                round(b.electricity_kwh, 2), round(b.gas_kwh, 2), 
+                round(b.heating_network_kwh, 2), round(b.cooling_kwh, 2), 
+                round(b.photovoltaic_production_kwh, 2),
+                round(float(b.total_co2_kg or 0), 2)
+            ])
         
         # Véhicules
         for v in VehicleData.objects.filter(year=year):
-            ws_d.append([year, "Véhicule", v.service, round(float(v.total_co2_kg or 0), 2)])
+            ws_veh.append([
+                year, v.service, v.get_calculation_method_display(),
+                v.essence_liters or 0, v.gazole_liters or 0, v.distance_km or 0,
+                round(float(v.total_co2_kg or 0), 2)
+            ])
             
         # Alimentation
         for f in FoodEntry.objects.filter(year=year):
-            ws_d.append([year, "Alimentation", f.service, round(float(f.total_co2_kg or 0), 2)])
+            ws_food.append([
+                year, f.service, 
+                f.beef_meals, f.pork_meals, f.poultry_fish_meals, f.vegetarian_meals, 
+                (f.picnic_meat_meals + f.picnic_no_meat_meals), f.total_meals,
+                round(float(f.total_co2_kg or 0), 2)
+            ])
             
         # Achats
         for p in PurchaseData.objects.filter(year=year):
-            ws_d.append([year, "Achat", p.get_category_display(), round(float(p.total_co2_kg or 0), 2)])
+            ws_pur.append([
+                year, p.get_category_display(), p.amount_eur,
+                round(float(p.total_co2_kg or 0), 2)
+            ])
             
         # Numérique
         for n in EquipementNumerique.objects.filter(year=year):
-            ws_d.append([year, "Numérique", n.nom, round(float(n.total_co2_kg or 0), 2)])
+            ws_num.append([
+                year, n.nom, n.get_type_equipement_display(), n.quantite,
+                round(n.consommation_annuelle, 2), round(n.empreinte_fabrication, 2),
+                round(float(n.total_co2_kg or 0), 2)
+            ])
 
     # Adjust Column Widths
-    for sheet in [ws, ws_d]:
+    for sheet in [ws, ws_bat, ws_veh, ws_food, ws_pur, ws_num]:
         for col in sheet.columns:
             max_length = 0
             column = col[0].column_letter # Get the column name
