@@ -44,10 +44,11 @@ class Command(BaseCommand):
         ReminderTemplate.get_template()
         self.stdout.write(self.style.SUCCESS("Reminder Template initialized."))
 
-        if not UserManual.objects.exists():
-            UserManual.objects.create(
-                title="Guide de Bienvenue - Eco-Dashboard",
-                content="""
+        UserManual.objects.update_or_create(
+            group=None,
+            defaults={
+                'title': "Guide de Bienvenue - Eco-Dashboard",
+                'content': """
                 <div class="manual-content">
                     <h3>👋 Bienvenue sur l'Eco-Dashboard de la Mairie</h3>
                     <p>Cet outil a pour objectif de centraliser et suivre les émissions de gaz à effet de serre de nos services. Voici comment l'utiliser au quotidien :</p>
@@ -80,8 +81,9 @@ class Command(BaseCommand):
                     <p><em>💡 Astuce : Si vous constatez une erreur dans les facteurs d'émission ou si vous avez besoin d'accès supplémentaires, contactez l'administrateur durable de la mairie.</em></p>
                 </div>
                 """
-            )
-            self.stdout.write(self.style.SUCCESS("Default User Manual initialized."))
+            }
+        )
+        self.stdout.write(self.style.SUCCESS("Default User Manual updated."))
 
         # 3. Define Sectors, Create Groups and a sample User for each Group
         self.stdout.write("Creating groups and a sample user for each sector...")
