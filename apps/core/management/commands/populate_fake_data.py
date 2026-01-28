@@ -39,7 +39,28 @@ class Command(BaseCommand):
         admin_user = User.objects.create_superuser('admin_demo', 'admin@demo.com', 'admin')
         self.stdout.write(self.style.SUCCESS(f"Superuser '{admin_user.username}' created. (password: admin)"))
 
-        # 2. Define Sectors, Create Groups and a sample User for each Group
+        # 2. Initialize Reminder Template & User Manual
+        from apps.core.models import ReminderTemplate, UserManual
+        ReminderTemplate.get_template()
+        self.stdout.write(self.style.SUCCESS("Reminder Template initialized."))
+
+        if not UserManual.objects.exists():
+            UserManual.objects.create(
+                title="Guide de Bienvenue",
+                content="""
+                <h3>👋 Bienvenue sur l'Eco-Dashboard</h3>
+                <p>Cet outil permet de collecter et visualiser l'empreinte carbone de la mairie.</p>
+                <ul>
+                    <li><strong>Tableau de Bord :</strong> Vue d'ensemble des émissions.</li>
+                    <li><strong>Modules de Saisie :</strong> Cliquez sur votre service dans le menu pour entrer vos données (Véhicules, Bâtiments, etc.).</li>
+                    <li><strong>Sensibilisation :</strong> Découvrez vos équivalences carbone et des conseils pour réduire l'impact.</li>
+                </ul>
+                <p><em>Pour toute question, contactez l'administrateur.</em></p>
+                """
+            )
+            self.stdout.write(self.style.SUCCESS("Default User Manual initialized."))
+
+        # 3. Define Sectors, Create Groups and a sample User for each Group
         self.stdout.write("Creating groups and a sample user for each sector...")
         sectors = ["Bâtiments", "Véhicules", "Alimentation", "Achats", "Numérique"]
         groups = {}
