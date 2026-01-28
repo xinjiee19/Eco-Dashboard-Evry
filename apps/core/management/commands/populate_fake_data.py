@@ -79,7 +79,6 @@ class Command(BaseCommand):
             factors_data = [
                 ('food_service', 'Restauration & Services légers', 100),
                 ('insurance', 'Assurances & Cotisations', 110),
-                ('it_telecom', 'IT & Téléphonie', 160),
                 ('cleaning_maintenance', 'Nettoyage & Entretien & Espaces verts', 215),
                 ('activities', 'Séjours & Activités', 270),
                 ('laundry', 'Blanchisserie', 320),
@@ -299,8 +298,8 @@ class Command(BaseCommand):
                     user=admin,
                     year=year,
                     service="Achats Généraux",
-                    category="it_telecom",
-                    description="PC Portables Direction",
+                    category="equipment_rental",
+                    description="Location Photocopieurs",
                     amount_euros=Decimal(15000)
                 )
                 # Numerique
