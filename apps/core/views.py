@@ -604,23 +604,47 @@ def export_statistics_view(request):
     
     # --- SHEET: Détails Bâtiments ---
     ws_bat = wb.create_sheet(title="Détails Bâtiments")
-    ws_bat.append(["Année", "Site", "Surface (m²)", "Élec (kWh)", "Gaz (kWh)", "Chaleur (kWh)", "Clim (kWh)", "PV (kWh)", "Impact (kgCO2e)"])
+    ws_bat.append([
+        "Année", "Site", "Surface (m²)", "Année Constr.", 
+        "Élec (kWh)", "Facteur Élec", 
+        "Gaz (kWh)", "Facteur Gaz", 
+        "Chaleur (kWh)", "Facteur Chaleur",
+        "Clim (kWh)", "Facteur Clim",
+        "PV (kWh)", "Impact (kgCO2e)"
+    ])
     
     # --- SHEET: Détails Véhicules ---
     ws_veh = wb.create_sheet(title="Détails Véhicules")
-    ws_veh.append(["Année", "Service", "Type Calcul", "Essence (L)", "Gazole (L)", "Distance (km)", "Impact (kgCO2e)"])
+    ws_veh.append([
+        "Année", "Service", "Type Calcul", 
+        "Essence (L)", "Gazole (L)", "Distance (km)", 
+        "Impact (kgCO2e)", "Notes"
+    ])
 
     # --- SHEET: Détails Alimentation ---
     ws_food = wb.create_sheet(title="Détails Alimentation")
-    ws_food.append(["Année", "Service", "Boeuf", "Porc", "Volaille/Poisson", "Végé", "Pique-Nique", "Total Repas", "Impact (kgCO2e)"])
+    ws_food.append([
+        "Année", "Service", 
+        "Boeuf", "Porc", "Volaille/Poisson", "Végé", "Pique-Nique", 
+        "Total Repas", "Impact (kgCO2e)"
+    ])
 
     # --- SHEET: Détails Achats ---
     ws_pur = wb.create_sheet(title="Détails Achats")
-    ws_pur.append(["Année", "Catégorie", "Montant (€)", "Impact (kgCO2e)"])
+    ws_pur.append([
+        "Année", "Catégorie", "Description", 
+        "Montant (€)", "Facteur (kgCO2e/k€)", 
+        "Impact (kgCO2e)"
+    ])
 
     # --- SHEET: Détails Numérique ---
     ws_num = wb.create_sheet(title="Détails Numérique")
-    ws_num.append(["Année", "Nom", "Type", "Quantité", "Conso (kWh)", "Fab. (kgCO2e)", "Impact (kgCO2e)"])
+    ws_num.append([
+        "Année", "Nom", "Marque/Modèle", "Type", 
+        "Quantité", "Durée Vie (ans)", 
+        "Conso (kWh/an)", "Fab. (kgCO2e)", 
+        "Impact (kgCO2e)"
+    ])
 
     # Global Header Style (Helper)
     def style_header(ws):
@@ -636,9 +660,11 @@ def export_statistics_view(request):
         # Bâtiments
         for b in BuildingEnergyData.objects.filter(year=year):
             ws_bat.append([
-                year, b.site_name, b.surface_area, 
-                round(b.electricity_kwh, 2), round(b.gas_kwh, 2), 
-                round(b.heating_network_kwh, 2), round(b.cooling_kwh, 2), 
+                year, b.site_name, b.surface_area, b.construction_year or "-",
+                round(b.electricity_kwh, 2), b.electricity_factor,
+                round(b.gas_kwh, 2), b.gas_factor,
+                round(b.heating_network_kwh, 2), b.heating_network_factor,
+                round(b.cooling_kwh, 2), b.cooling_factor,
                 round(b.photovoltaic_production_kwh, 2),
                 round(float(b.total_co2_kg or 0), 2)
             ])
@@ -648,7 +674,8 @@ def export_statistics_view(request):
             ws_veh.append([
                 year, v.service, v.get_calculation_method_display(),
                 v.essence_liters or 0, v.gazole_liters or 0, v.distance_km or 0,
-                round(float(v.total_co2_kg or 0), 2)
+                round(float(v.total_co2_kg or 0), 2),
+                v.notes
             ])
             
         # Alimentation
@@ -663,14 +690,16 @@ def export_statistics_view(request):
         # Achats
         for p in PurchaseData.objects.filter(year=year):
             ws_pur.append([
-                year, p.get_category_display(), p.amount_euros,
+                year, p.get_category_display(), p.description,
+                p.amount_euros, p.emission_factor,
                 round(float(p.total_co2_kg or 0), 2)
             ])
             
         # Numérique
         for n in EquipementNumerique.objects.filter(year=year):
             ws_num.append([
-                year, n.nom, n.get_type_equipement_display(), n.quantite,
+                year, n.nom, n.marque_modele or "-", n.get_type_equipement_display(), 
+                n.quantite, n.duree_vie,
                 round(n.consommation_annuelle, 2), round(n.empreinte_fabrication, 2),
                 round(float(n.total_co2_kg or 0), 2)
             ])
