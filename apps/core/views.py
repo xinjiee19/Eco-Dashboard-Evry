@@ -584,7 +584,7 @@ def export_statistics_view(request):
     # Chart: Stacked Bar
     chart = BarChart()
     chart.type = "col"
-    chart.style = 10
+    chart.style = 1
     chart.title = "Évolution des Émissions par Secteur"
     chart.y_axis.title = "kg CO₂e"
     chart.x_axis.title = "Année"
