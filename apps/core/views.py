@@ -600,6 +600,23 @@ def export_statistics_view(request):
     chart.add_data(data, titles_from_data=True)
     chart.set_categories(cats)
     
+    # Apply Custom Colors (consistent with Dashboard)
+    # Series 0: Bâtiments (Orange)
+    if len(chart.series) > 0:
+        chart.series[0].graphicalProperties.solidFill = "F39C12"
+    # Series 1: Véhicules (Blue)
+    if len(chart.series) > 1:
+        chart.series[1].graphicalProperties.solidFill = "4A90E2"
+    # Series 2: Alimentation (Green)
+    if len(chart.series) > 2:
+        chart.series[2].graphicalProperties.solidFill = "27AE60"
+    # Series 3: Achats (Purple)
+    if len(chart.series) > 3:
+        chart.series[3].graphicalProperties.solidFill = "9B59B6"
+    # Series 4: Numérique (Dark Blue/Grey)
+    if len(chart.series) > 4:
+        chart.series[4].graphicalProperties.solidFill = "34495E"
+    
     ws.add_chart(chart, "H2")
     
     # --- SHEET 2: DÉTAILS COMPLETS ---
