@@ -57,3 +57,23 @@ class ADEMEConfigurationAdmin(admin.ModelAdmin):
             )
         
         return form
+
+from .models import UserManual
+
+@admin.register(UserManual)
+class UserManualAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'title', 'group', 'updated_at')
+    list_filter = ('group',)
+    search_fields = ('title', 'content')
+
+from .models import ReminderTemplate
+
+@admin.register(ReminderTemplate)
+class ReminderTemplateAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'subject', 'updated_at')
+    
+    def has_add_permission(self, request):
+        return not ReminderTemplate.objects.exists()
+        
+    def has_delete_permission(self, request, obj=None):
+        return False

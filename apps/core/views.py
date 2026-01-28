@@ -34,6 +34,36 @@ def logout_view(request):
 
 
 @login_required
+def manual_view(request):
+    """View for the user manual page."""
+    from apps.core.models import UserManual
+    
+    # 1. Try to find user's group manual
+    user_groups = request.user.groups.all()
+    manual = None
+    
+    if user_groups.exists():
+        # Priority: just take first group found for now
+        manual = UserManual.objects.filter(group__in=user_groups).first()
+        
+    # 2. Fallback to default global manual
+    if not manual:
+        manual = UserManual.objects.filter(group__isnull=True).first()
+        
+    # 3. Last resort if DB is empty
+    if not manual:
+        title = "Guide Utilisateur"
+        content = "<p>Le guide utilisateur n'a pas encore été configuré.</p>"
+    else:
+        title = manual.title
+        content = manual.content
+        
+    return render(request, 'core/manual.html', {
+        'manual_title': title,
+        'manual_content': content
+    })
+
+@login_required
 def dashboard_view(request):
     """Vue du tableau de bord"""
     from django.db.models import Sum
@@ -87,47 +117,67 @@ def dashboard_view(request):
 
 
 @login_required
+@login_required
 def send_reminder_email(request):
     """
-    Envoie un email de rappel à tous les agents pour saisir leurs données.
-    Réservé aux administrateurs.
+    Envoie un email de rappel à une sélection d'agents.
+    Permet de modifier le sujet et le message avant envoi.
     """
     from django.contrib.auth.models import User
     from django.core.mail import send_mail
-    from django.template.loader import render_to_string
     from django.conf import settings
     from django.utils import timezone
+    from apps.core.models import ReminderTemplate
     import logging
     
     # Vérifier que l'utilisateur est admin
     if not request.user.is_staff:
         messages.error(request, "⛔ Accès refusé. Cette fonctionnalité est réservée aux administrateurs.")
         return redirect('dashboard')
+        
+    year = timezone.now().year
+    domain = request.get_host()
+    
+    # Récupérer le modèle de rappel (ou défaut)
+    try:
+        template = ReminderTemplate.objects.first()
+    except:
+        template = None
+        
+    default_subject = template.subject.format(year=year) if template else f"Rappel - Saisie du bilan carbone {year}"
+    default_body = template.body if template else "Bonjour {user},\n\nC'est le moment de saisir vos données..."
+
+    # Récupérer tous les destinataires potentiels
+    potential_recipients = User.objects.filter(
+        is_active=True,
+        is_staff=False
+    ).exclude(email='')
     
     if request.method == 'POST':
-        # Récupérer tous les users actifs (sauf admins et ceux sans email)
-        recipients = User.objects.filter(
-            is_active=True,
-            is_staff=False
-        ).exclude(email='')
+        # Récupérer données du formulaire
+        subject = request.POST.get('subject', default_subject)
+        body_template = request.POST.get('body', default_body)
+        selected_ids = request.POST.getlist('recipients')
         
-        # Envoyer l'email
+        # Filtrer destinataires sélectionnés
+        recipients = potential_recipients.filter(id__in=selected_ids)
+        
         sent_count = 0
         failed_count = 0
         
         for user in recipients:
             try:
-                # Préparer le message
-                message = render_to_string('emails/reminder.txt', {
-                    'user': user,
-                    'year': timezone.now().year,
-                    'domain': request.get_host()
-                })
+                # Personnaliser le message pour cet utilisateur
+                # On utilise .format() simple, attention si le template contient des accolades littérales
+                # Il vaut mieux être prudent ou utiliser replace
+                user_body = body_template.replace('{user}', user.username)\
+                                       .replace('{year}', str(year))\
+                                       .replace('{url}', f"{request.scheme}://{domain}")
                 
                 # Envoyer
                 send_mail(
-                    subject=f"Rappel - Saisie du bilan carbone {timezone.now().year}",
-                    message=message,
+                    subject=subject,
+                    message=user_body,
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[user.email],
                     fail_silently=False,
@@ -146,15 +196,12 @@ def send_reminder_email(request):
         
         return redirect('dashboard')
     
-    # GET : Afficher page de confirmation
-    recipients_count = User.objects.filter(
-        is_active=True,
-        is_staff=False
-    ).exclude(email='').count()
-    
+    # GET : Afficher formulaire
     return render(request, 'core/confirm_send_email.html', {
-        'recipients_count': recipients_count,
-        'current_year': timezone.now().year
+        'recipients': potential_recipients,
+        'current_year': year,
+        'default_subject': default_subject,
+        'default_body': default_body
     })
 
 

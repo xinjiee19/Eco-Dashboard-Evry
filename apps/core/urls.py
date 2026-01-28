@@ -9,6 +9,7 @@ urlpatterns = [
     path('api/dashboard-emissions/', views.dashboard_emissions_api, name='dashboard_emissions_api'),
     path('api/statistics-data/', views.statistics_api, name='statistics_data_api'),
     path('export-data/', views.export_data_view, name='export_data'),
+    path('manual/', views.manual_view, name='manual'),
     path('statistics/', views.statistics_view, name='statistics'),
     path('statistics/export/', views.export_statistics_view, name='export_statistics'),
 ]

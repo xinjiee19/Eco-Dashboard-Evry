@@ -156,7 +156,6 @@ class PurchaseData(models.Model):
             default_factors = {
                 'food_service': Decimal('100.00'),
                 'insurance': Decimal('110.00'),
-                'it_telecom': Decimal('160.00'),
                 'cleaning_maintenance': Decimal('215.00'),
                 'activities': Decimal('270.00'),
                 'laundry': Decimal('320.00'),

@@ -1,5 +1,41 @@
 from django.db import models
 from django.core.validators import URLValidator
+from django.contrib.auth.models import Group
+
+class UserManual(models.Model):
+    """
+    Manuel utilisateur dynamique éditable depuis l'admin.
+    Peut être personnalisé par groupe d'utilisateurs.
+    """
+    title = models.CharField(max_length=200, default="Guide Utilisateur", verbose_name="Titre du guide")
+    
+    # Contenu HTML stocké en texte
+    content = models.TextField(
+        verbose_name="Contenu HTML",
+        help_text="Code HTML du manuel. Vous pouvez utiliser des balises <h3>, <p>, <ul>, <li>, etc."
+    )
+    
+    # Liaison optionnelle à un groupe
+    group = models.OneToOneField(
+        Group,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Groupe cible",
+        help_text="Si vide, ce manuel sera le guide par défaut pour tous."
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Manuel Utilisateur"
+        verbose_name_plural = "Manuels Utilisateurs"
+        ordering = ['group__name']
+
+    def __str__(self):
+        target = self.group.name if self.group else "Défaut (Global)"
+        return f"Manuel - {target}"
 
 
 class ADEMEConfiguration(models.Model):
@@ -132,3 +168,39 @@ class ADEMEConfiguration(models.Model):
         """
         sectors_dict = dict(self.SECTORS_CHOICES)
         return [sectors_dict.get(sector, sector) for sector in self.active_sectors]
+
+
+class ReminderTemplate(models.Model):
+    """
+    Modèle pour stocker le contenu de l'email de rappel.
+    Singleton (comme ADEMEConfiguration).
+    """
+    subject = models.CharField(
+        max_length=200, 
+        default="Rappel - Saisie du bilan carbone {year}",
+        verbose_name="Sujet de l'email"
+    )
+    
+    body = models.TextField(
+        default="Bonjour {user},\n\nC'est le moment de saisir vos données pour le bilan carbone {year} de la Mairie d'Évry-Courcouronnes.\n\n📊 Accédez au tableau de bord : {url}\n\nMerci de saisir vos consommations énergétiques et déplacements professionnels dans les meilleurs délais.\n\nCordialement,\nL'équipe Bilan Carbone",
+        verbose_name="Corps du message",
+        help_text="Variables disponibles : {user} (nom), {year} (année), {url} (lien dashboard)."
+    )
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Modèle d'Email de Rappel"
+        verbose_name_plural = "Modèles d'Email de Rappel"
+        
+    def __str__(self):
+        return "Modèle d'Email de Rappel"
+        
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_template(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj

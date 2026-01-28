@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Guide Utilisateur - Bilan Carbone{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header"
+        style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <h2 class="page-title" style="color: #2d6a4f; margin: 0;">{{ manual_title }}</h2>
+        <a href="{% url 'dashboard' %}" class="btn btn--secondary">← Retour au Dashboard</a>
+    </div>
+
+    <div class="guide-content"
+        style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+
+        {{ manual_content|safe }}
+
+    </div>
+</div>
+{% endblock %}
