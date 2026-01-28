@@ -120,8 +120,15 @@
         <div class="user-info">
             <strong>{{ user.username }}</strong><br>
             <small>
-                {% if user.is_superuser %}Super-Admin{% elif user.is_staff %}Admin{% else %}Agent ({{
-                user.groups.first.name|default:'N/A' }}){% endif %}
+                {% if user.is_superuser %}
+                Super-Admin
+                {% elif user.is_staff %}
+                Admin
+                {% else %}
+                {% with group_name=user.groups.first.name|default:'N/A' %}
+                Agent ({{ group_name }})
+                {% endwith %}
+                {% endif %}
             </small>
         </div>
         <a href="{% url 'logout' %}" class="logout-link">Déconnexion</a>

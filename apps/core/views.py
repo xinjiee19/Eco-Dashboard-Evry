@@ -86,7 +86,6 @@ def dashboard_view(request):
     base_queryset_batiment = BuildingEnergyData.objects.all()
     base_queryset_numerique = EquipementNumerique.objects.all()
 
-
     # Calcul des totaux pour l'année en cours
     vehicles_total = float(base_queryset_vehicles.filter(year=current_year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
     purchases_total = float(base_queryset_purchases.filter(year=current_year).aggregate(total=Sum('total_co2_kg'))['total'] or 0)
@@ -116,7 +115,6 @@ def dashboard_view(request):
     return render(request, 'core/dashboard.html', context)
 
 
-@login_required
 @login_required
 def send_reminder_email(request):
     """
