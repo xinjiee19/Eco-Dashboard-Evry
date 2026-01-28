@@ -81,9 +81,15 @@
                             {% if item.variation == None %}
                             <span style="color: #999;">--</span>
                             {% elif item.positive %}
-                            <span style="background: #d4edda; color: #155724; padding: 4px 10px; border-radius: 12px; font-weight: 600;">{{ item.variation }}%</span>
+                            <span
+                                style="background: #d4edda; color: #155724; padding: 4px 10px; border-radius: 12px; font-weight: 600;">
+                                {{ item.variation }}%
+                            </span>
                             {% else %}
-                            <span style="background: #f8d7da; color: #721c24; padding: 4px 10px; border-radius: 12px; font-weight: 600;">+{{ item.variation }}%</span>
+                            <span
+                                style="background: #f8d7da; color: #721c24; padding: 4px 10px; border-radius: 12px; font-weight: 600;">
+                                +{{ item.variation }}%
+                            </span>
                             {% endif %}
                         </td>
                     </tr>
@@ -171,6 +177,23 @@
     </div>
     {% endif %}
 
+    <!-- Ressources Extérieures -->
+    <div
+        style="background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; border-left: 5px solid #20c997; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <h3
+            style="color: #003366; margin-top: 0; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🌱</span> Aller plus loin
+        </h3>
+        <p style="color: #666; font-size: 1.05rem; line-height: 1.6; margin-bottom: 1.5rem;">
+            Découvrez les simulateurs ludiques de l'ADEME pour visualiser l'impact de vos gestes au quotidien
+            (transport, numérique, chauffage...).
+        </p>
+        <a href="https://impactco2.fr/outils" target="_blank" rel="noopener noreferrer"
+            style="display: inline-flex; align-items: center; gap: 0.5rem; background: #20c997; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.2s;">
+            <span>🚀</span> Découvrir les outils Impact CO₂
+        </a>
+    </div>
+
     <!-- Section Admin : Création de Message -->
     {% if form %}
     <style>
@@ -204,23 +227,25 @@
         <form method="post">
             {% csrf_token %}
             <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333;">{{ form.titre.label }}</label>
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333;">Titre</label>
                 {{ form.titre }}
             </div>
             <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333;">{{ form.contenu.label }}</label>
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333;">Message</label>
                 {{ form.contenu }}
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
                 <div>
-                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333;">{{ form.type_contenu.label }}</label>
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333;">Type de
+                        contenu</label>
                     {{ form.type_contenu }}
                     {% if form.type_contenu.help_text %}
                     <span class="help-text">{{ form.type_contenu.help_text }}</span>
                     {% endif %}
                 </div>
                 <div>
-                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333;">{{ form.type_message.label }}</label>
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333;">Type de
+                        message</label>
                     {{ form.type_message }}
                     {% if form.type_message.help_text %}
                     <span class="help-text">{{ form.type_message.help_text }}</span>
