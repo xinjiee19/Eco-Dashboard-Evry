@@ -501,6 +501,13 @@ def statistics_api(request):
         details_data[year]['numerique'] = n_breakdown
         stacked_data['numerique'].append(total_n)
 
+    return JsonResponse({
+        'years': sorted_years,
+        'stacked_data': stacked_data,
+        'details_data': details_data
+    })
+
+
 @login_required
 def export_statistics_view(request):
     """
