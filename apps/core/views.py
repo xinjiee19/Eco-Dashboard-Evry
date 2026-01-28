@@ -656,7 +656,7 @@ def export_statistics_view(request):
             ws_food.append([
                 year, f.service, 
                 f.beef_meals, f.pork_meals, f.poultry_fish_meals, f.vegetarian_meals, 
-                (f.picnic_meat_meals + f.picnic_no_meat_meals), f.total_meals,
+                (f.picnic_meat_meals + f.picnic_no_meat_meals), f.total_meals(),
                 round(float(f.total_co2_kg or 0), 2)
             ])
             
