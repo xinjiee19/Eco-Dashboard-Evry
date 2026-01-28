@@ -563,11 +563,11 @@ def export_statistics_view(request):
         
     # Data Rows
     for year in sorted_years:
-        b_total = BuildingEnergyData.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0
-        v_total = VehicleData.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0
-        f_total = FoodEntry.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0
-        p_total = PurchaseData.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0
-        n_total = EquipementNumerique.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0
+        b_total = float(BuildingEnergyData.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0)
+        v_total = float(VehicleData.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0)
+        f_total = float(FoodEntry.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0)
+        p_total = float(PurchaseData.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0)
+        n_total = float(EquipementNumerique.objects.filter(year=year).aggregate(s=Sum('total_co2_kg'))['s'] or 0)
         
         g_total = b_total + v_total + f_total + p_total + n_total
         
